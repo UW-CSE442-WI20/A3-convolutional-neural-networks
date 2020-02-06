@@ -57,7 +57,7 @@ function convolution(i, kernel, class_name, cell_transform) {
 
     var other_rects = d3.selectAll(class_name === "input" ? ".output" : ".input").nodes()
     var other_cur_rect = d3.select(other_rects[i])
-    console.log(parseFloat(other_cur_rect.attr("x")) + parseFloat(other_cur_rect.attr("width")) / 2)
+
     var cur_rect = d3.select(rects[i])
     d3.select("svg")
         .append("line")
@@ -95,9 +95,6 @@ var cell_padding = 4;
 
 var cell_w = w / img_data[0].length // - cell_padding * (img_data[0].length + 1) / img_data[0].length
 var cell_h = h / img_data.length // - cell_padding * (img_data.length + 1) / img_data.length
-
-console.log(cell_w)
-console.log(cell_h)
 
 var x_scale = d3.scaleLinear()
             .domain([0, img_data[0].length - 1])
@@ -170,3 +167,18 @@ svg.selectAll("rect")
     .attr("stroke", "gray")
     .attr("stroke-width", cell_padding)
     .classed("kernel", true)
+
+const filter = d3.select("#filter-selection");
+// const filterDisplay = d3.select("body")
+//             .append("svg")
+//             .attr("width", 240)
+//             .attr("height", 240)
+//             .style("background-color", "white");
+
+//filterDisplay.selectAll()
+
+function update() {
+    console.log(filter.node().value);
+}
+
+filter.on("change", update);
