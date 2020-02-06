@@ -34,10 +34,11 @@ function visualize_current_convolution(i, kernel_w, kernel_h, cell_transform) {
     }
 }
 
-var img_data = rand_img(8, 8)
+// Image loads HERE!!!
+var img_data = rand_img(28, 28)
 
-var kernel_w = 3
-var kernel_h = 3
+var kernel_w = 7
+var kernel_h = 7
 
 var w = 640;
 var h = 640;
