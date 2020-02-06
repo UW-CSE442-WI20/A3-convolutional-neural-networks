@@ -80,3 +80,20 @@ svg.selectAll("rect")
     })
     .on("mouseover", (d, i) => visualize_current_convolution(i, kernel_w, kernel_h, c => c.attr("fill", "red")))
     .on("mouseout", (d, i) => visualize_current_convolution(i, kernel_w, kernel_h, c => c.attr("fill", d => d == 0 ? "black" : "white")));
+
+
+
+const filter = d3.select("#filter-selection");
+const filterDisplay = d3.select("body")
+            .append("svg")
+            .attr("width", 240)
+            .attr("height", 240)
+            .style("background-color", "white");
+
+//filterDisplay.selectAll()
+
+function update() {
+    console.log(filter.node().value);
+}
+
+filter.on("change", update);
