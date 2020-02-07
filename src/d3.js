@@ -244,11 +244,11 @@ function updateFilter() {
 function updateHighlight() {
     if (selectionX !== null && selectionY !== null) {
         d3.select("#inputHighlight")
-            .attr("x", (selectionX - 1) * cellWidth)
-            .attr("y", (selectionY - 1) * cellHeight);
+            .attr("x", (selectionX - 1) * cellWidth - borderWidth)
+            .attr("y", (selectionY - 1) * cellHeight - borderWidth);
         d3.select("#outputHighlight")
-            .attr("x", (inputWidth + kernelWidth) * cellWidth + spaceBetween * 2 + (selectionX - 1) * cellWidth)
-            .attr("y", selectionY * cellHeight);
+            .attr("x", (selectionX - 1) * cellWidth - borderWidth)
+            .attr("y", (selectionY - 1) * cellHeight - borderWidth);
     }
 }
 
@@ -272,6 +272,9 @@ let image = rand_img_tensor(inputWidth, inputHeight, 1);
 let filteredImg = tf.zeros([outputWidth, outputHeight]);
 let kernel = tf.zeros([kernelWidth, kernelHeight, 1, 1]);
 
+// Cell border
+const borderWidth = 2;
+
 // Padding between images
 const spaceBetween = 40;
 
@@ -291,43 +294,25 @@ const color_scale =
                 .range([1, 0])
 
 
-
 const svg = d3.select("body")
             .append("svg")
-            .attr("width", (inputWidth + kernelWidth + outputWidth) * cellWidth + spaceBetween * 2)
-            .attr("height", inputHeight * cellHeight)
-
-//// Masks
-// Input
-svg.append("defs")
-    .append("clipPath").attr("id", "inputImgMask")
-    .append("rect")
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("width", cellWidth * inputWidth)
-    .attr("height", cellHeight * inputHeight);
-// Output
-svg.append("defs")
-    .append("clipPath").attr("id", "outputImgMask")
-    .append("rect")
-    .attr("x", (inputWidth + kernelWidth) * cellWidth + spaceBetween * 2)
-    .attr("y", Math.floor((kernelHeight - 1) / 2) * cellHeight)
-    .attr("width", cellWidth * outputWidth)
-    .attr("height", cellHeight * outputHeight);
-// Kernel
-svg.append("defs")
-    .append("clipPath").attr("id", "kernelImgMask")
-    .append("rect")
-    .attr("x", inputWidth * cellWidth + spaceBetween)
-    .attr("y", (inputHeight - kernelHeight) * cellHeight)
-    .attr("width", cellWidth * kernelWidth)
-    .attr("height", cellHeight * kernelHeight);
+            .attr("width", (inputWidth + kernelWidth + outputWidth) * cellWidth + spaceBetween * 2 + borderWidth * 6)
+            .attr("height", inputHeight * cellHeight + borderWidth * 2);
 
 //// Images
 // Input
 const inputImg = svg.append("g")
     .attr("clip-path", "url(#inputImgMask)");
-const inputCells = inputImg.selectAll("rect")
+const inputOutline = inputImg.append("rect")
+    .attr("id", "inputOutline")
+    .attr("x", -borderWidth)
+    .attr("y", -borderWidth)
+    .attr("width", cellWidth * inputWidth + 2 * borderWidth)
+    .attr("height", cellHeight * inputHeight + 2 * borderWidth)
+    .classed("outlined", true)
+    .attr("fill-opacity", 0)
+    .exit();
+const inputCells = inputImg.selectAll(".input")
     .data(tensorToFlat(image))
     .enter()
     .append("rect")
@@ -350,15 +335,23 @@ const inputCells = inputImg.selectAll("rect")
 // Output
 const outputImg = svg.append("g")
     .attr("clip-path", "url(#outputImgMask)");
-const outputCells = outputImg.selectAll("rect")
+const outputOutline = outputImg.append("rect")
+    .attr("id", "outputOutline")
+    .attr("x", -borderWidth)
+    .attr("y", -borderWidth)
+    .attr("width", cellWidth * outputWidth + 2 * borderWidth)
+    .attr("height", cellHeight * outputHeight + 2 * borderWidth)
+    .classed("outlined", true)
+    .attr("fill-opacity", 0);
+const outputCells = outputImg.selectAll(".output")
     .data(tensorToFlat(filteredImg))
     .enter()
     .append("rect")
     .attr("x", function(_, i) {
-        return (kernelWidth + inputWidth) * cellWidth + spaceBetween * 2 + x_scale(i % outputHeight)
+        return x_scale(i % outputHeight)
     })
     .attr("y", function(_, i) {
-        return Math.floor((kernelHeight - 1) / 2) * cellHeight + y_scale(Math.floor(i / outputHeight))
+        return y_scale(Math.floor(i / outputHeight))
     })
     .attr("width", cellWidth)
     .attr("height", cellHeight)
@@ -369,19 +362,27 @@ const outputCells = outputImg.selectAll("rect")
         selectionX = i % outputHeight + Math.floor((kernelWidth - 1) / 2);
         selectionY = Math.floor(i / outputHeight) + Math.floor((kernelHeight - 1) / 2);
         updateHighlight();
-    })
+    });
 // Kernel
 const kernelImg = svg.append("g")
     .attr("clip-path", "url(#kernelImgMask)");
-kernelImg.selectAll("rect")
+const kernelOutline = kernelImg.append("rect")
+    .attr("id", "kernelOutline")
+    .attr("x", -borderWidth)
+    .attr("y", -borderWidth)
+    .attr("width", cellWidth * kernelWidth + 2 * borderWidth)
+    .attr("height", cellHeight * kernelHeight + 2 * borderWidth)
+    .classed("outlined", true)
+    .attr("fill-opacity", 0);
+const kernelCells = kernelImg.selectAll(".kernel")
     .data(tensorToFlat(kernel))
     .enter()
     .append("rect")
     .attr("x", function(_, i) {
-        return inputWidth * cellWidth + spaceBetween + x_scale(i % kernelHeight)
+        return x_scale(i % kernelHeight)
     })
     .attr("y", function(_, i) {
-        return y_scale(inputHeight - kernelHeight + Math.floor(i / kernelHeight))
+        return y_scale(Math.floor(i / kernelHeight))
     })
     .attr("width", cellWidth)
     .attr("height", cellHeight)
@@ -396,8 +397,8 @@ inputImg.append("rect")
     .attr("pointer-events", "none")
     .attr("x", -1000)
     .attr("y", -1000)
-    .attr("width", cellWidth * 3)
-    .attr("height", cellHeight * 3)
+    .attr("width", cellWidth * 3 + borderWidth * 2)
+    .attr("height", cellHeight * 3 + borderWidth * 2)
     .attr("fill", "yellow")
     .attr("fill-opacity", 0.2);
 // Output
@@ -406,11 +407,35 @@ outputImg.append("rect")
     .attr("pointer-events", "none")
     .attr("x", -1000)
     .attr("y", -1000)
-    .attr("width", cellWidth)
-    .attr("height", cellHeight)
+    .attr("width", cellWidth + borderWidth * 2)
+    .attr("height", cellHeight + borderWidth * 2)
     .attr("fill", "yellow")
     .attr("fill-opacity", 0.2);
+
+//// Masks
+// Input
+inputImg.append("defs")
+    .append("clipPath").attr("id", "inputImgMask")
+    .append("use").attr("xlink:href", "#inputOutline");
+// Output
+outputImg.append("defs")
+    .append("clipPath").attr("id", "outputImgMask")
+    .append("use").attr("xlink:href", "#outputOutline");
+// Kernel
+kernelImg.append("defs")
+    .append("clipPath").attr("id", "kernelImgMask")
+    .append("use").attr("xlink:href", "#kernelOutline");
+
+inputImg.attr("transform", `translate(${borderWidth}, 
+                                      ${borderWidth})`);
+outputImg.attr("transform", `translate(${(inputWidth + kernelWidth) * cellWidth + spaceBetween * 2 + borderWidth * 5}, 
+                                       ${Math.floor((kernelHeight - 1) / 2) * cellHeight + borderWidth})`);
+kernelImg.attr("transform", `translate(${inputWidth * cellWidth + spaceBetween + 3 * borderWidth}, 
+                                       ${(inputHeight - kernelHeight) * cellHeight + borderWidth})`);
 
 updateFilter();
 
 d3.select("#filter-selection").on("change", updateFilter);
+
+d3.selectAll(".outlined")
+    .attr("style", `outline-width: ${borderWidth}px; outline-offset: ${-borderWidth}px;`);
