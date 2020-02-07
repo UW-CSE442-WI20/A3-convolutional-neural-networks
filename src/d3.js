@@ -1,4 +1,6 @@
 import * as d3 from "d3";
+//import * as tf from '@tensorflow/tfjs-node'
+import * as tf from '@tensorflow/tfjs'
 
 function rand_img(m, n) {
     return [...Array(m)].map(() => [...Array(n)].map(() => (Math.random() < 0.5) | 0))
@@ -84,13 +86,45 @@ svg.selectAll("rect")
 
 
 const filter = d3.select("#filter-selection");
-const filterDisplay = d3.select("body")
-            .append("svg")
-            .attr("width", 240)
-            .attr("height", 240)
-            .style("background-color", "white");
 
-//filterDisplay.selectAll()
+/**
+ * Returns a convolution layer. To apply the convolution, call .apply(<image>).
+ * 
+ * @param {number[]} inShape [width, height, channels]
+ * @param {number[][]} kernel 
+ * @param {number} stride 
+ * @param {number} dialation
+ * 
+ * @throws If stride != 1 and dialation != 1
+ */
+function createConv(inShape, kernel, stride, dialation) {
+    return tf.layers.conv2d({
+        inputShape: inShape,
+        kernelSize: [kernel.length, kernel[0].length],
+        filters: 1,
+        strides: stride,
+        dilationRate: dialation,
+        trainable: false,
+        useBias: false,
+        weights: [tf.tensor(kernel.map((row) => row.map((v) => [[v]])))]
+    });
+}
+
+const x_sobel = [
+    [-1, 0, 1],
+    [-2, 0, 2],
+    [-1, 0, 1]
+];
+const y_sobel = [
+    [-1, -2, -1],
+    [ 0,  0,  0],
+    [ 1,  2,  1]
+];
+
+const convLayer = createConv([28, 28, 1], x_sobel, 1, 1);
+
+const img = tf.ones([1, 28, 28, 1]);
+console.log(convLayer.apply(img).shape);
 
 function update() {
     console.log(filter.node().value);
