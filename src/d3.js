@@ -236,6 +236,9 @@ function updateFilter() {
 
     outputCells.data(tensorToFlat(filteredImg))
         .attr("fill", d => gray(color_scale(d)));
+    kernelCells.data(tensorToFlat(kernel))
+        .select("text")
+        .text(d => d);
 }
 
 /**
@@ -377,7 +380,9 @@ const kernelOutline = kernelImg.append("rect")
 const kernelCells = kernelImg.selectAll(".kernel")
     .data(tensorToFlat(kernel))
     .enter()
-    .append("rect")
+    .append("g")
+    .classed("kernel", true);
+kernelCells.append("rect")
     .attr("x", function(_, i) {
         return x_scale(i % kernelHeight)
     })
@@ -387,8 +392,15 @@ const kernelCells = kernelImg.selectAll(".kernel")
     .attr("width", cellWidth)
     .attr("height", cellHeight)
     .attr("fill", d => gray(color_scale(d)))
-    .classed("outlined", true)
-    .classed("kernel", true);
+    .classed("outlined", true);
+kernelCells.append("text")
+    .attr("x", function(_, i) {
+        return x_scale(i % kernelHeight) + Math.floor(cellWidth / 2)
+    })
+    .attr("y", function(_, i) {
+        return y_scale(Math.floor(i / kernelHeight)) + Math.floor(cellHeight / 2)
+    })
+    .text("1");
 
 //// Highlights
 // Input
@@ -439,3 +451,5 @@ d3.select("#filter-selection").on("change", updateFilter);
 
 d3.selectAll(".outlined")
     .attr("style", `outline-width: ${borderWidth}px; outline-offset: ${-borderWidth}px;`);
+d3.selectAll("text")
+    .attr("style", `font-size: ${Math.min(cellHeight, cellWidth) / 2}px`);
