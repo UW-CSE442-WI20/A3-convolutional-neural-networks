@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import { color } from "d3";
 
 function rand_img(m, n) {
-    return [...Array(m)].map(() => [...Array(n)].map(() => Math.random()))
+    return [...Array(m)].map(() => [...Array(n)].map(() => 0));
 }
 
 function gray(d) {
@@ -83,8 +83,46 @@ function convolution(i, kernel, class_name, cell_transform) {
     }
 }
 
+/// *****************************************
+/// This is Michael's image code. DO NOT EDIT
+/// *****************************************
+const canvas = document.getElementById('input-image');
+const context = canvas.getContext('2d');
+
+let pixelValues = [];
+
+for (let i = 0; i < canvas.height; i++) {
+    pixelValues[i] = [];
+}
+
+function grayScaleImage() {
+    var imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < imgData.data.length; i += 4) {
+        let x = (i / 4) % canvas.width;
+        let y = Math.floor((i / 4) / canvas.width);
+        pixelValues[y][x] = 0.0;
+        //pixelValues[y][x] = imgData.data[i] / 256.0 + 0.01; //parseInt((imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2])/3);
+    }
+
+    f();
+}
+
+const base_image = new Image();
+base_image.onload = function(){
+    context.drawImage(base_image, 0, 0);
+    grayScaleImage();
+}
+
+base_image.crossOrigin = "Anonymous";
+base_image.src = 'https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/michan4-v1/Images/0.png';
+
+/// ****************************************
+/// End of Michael's code
+/// ****************************************
+
 // Image loads HERE!!!
-var img_data = rand_img(28, 28)
+var img_data = pixelValues;
 
 var kernel = [[ 0, 0, 0],
               [ 1/3, 1/3, 1/3],
@@ -110,6 +148,7 @@ var svg = d3.select("body")
             .attr("width", w * 5 / 2)
             .attr("height", h)
 
+function f() {
 svg.selectAll("rect")
 
     // Input
@@ -183,3 +222,4 @@ function update() {
 }
 
 filter.on("change", update);
+}
