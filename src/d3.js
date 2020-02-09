@@ -42,7 +42,7 @@ const outputHeight = PADDED ?
 let selectionX = null;
 let selectionY = null;
 
-let image = tf.zeros([1, 28, 28, 1]);
+let image = tf.zeros([1, inputWidth, inputHeight, 1]);
 let filteredImg = tf.zeros([outputWidth, outputHeight]);
 let kernel = tf.zeros([kernelWidth, kernelHeight, 1, 1]);
 
@@ -309,7 +309,7 @@ function createConv(inShape, kernel, stride, dialation, padded) {
 }
 
 /**
- * Updates display with new filter data.
+ * Updates display and data with new filter choice.
  */
 function updateData() {
     const filter = d3.select("#filter-selection");
@@ -341,7 +341,7 @@ function updateData() {
 }
 
 /**
- * Updates display with new highlight data.
+ * Updates display with new selection.
  */
 function updateSelection() {
     if (selectionX !== null && selectionY !== null) {
@@ -365,6 +365,9 @@ function updateSelection() {
     }
 }
 
+/**
+ * Initialize the root SVG.
+ */
 function initSVG() {
     d3.select("body")
         .append("svg")
@@ -373,8 +376,9 @@ function initSVG() {
         .attr("height", inputHeight * cellHeight + borderWidth * 2);
 }
 
-//// Images
-// Input
+/**
+ * Initialize the container for the image of the input.
+ */
 function initInputImg() {
     // g element containing all of the image contents
     const inputImg = d3.select("#rootDisplay")
@@ -398,6 +402,9 @@ function initInputImg() {
         .append("use").attr("xlink:href", "#inputOutline");
 }
 
+/**
+ * Initialize the container for the image of the output.
+ */
 function initOutputImg() {
     // g element containing all of the image contents
     const outputImg = d3.select("#rootDisplay")
@@ -421,6 +428,9 @@ function initOutputImg() {
         .append("use").attr("xlink:href", "#outputOutline");
 }
 
+/**
+ * Initialize the container for the image of the kernel.
+ */
 function initKernelImg() {
     // g element containing all of the image contents
     const kernelImg = d3.select("#rootDisplay")
@@ -444,6 +454,9 @@ function initKernelImg() {
         .append("use").attr("xlink:href", "#kernelOutline");
 }
 
+/**
+ * Initialize the effects(lines, highlighting).
+ */
 function initEffects() {
     const effects = d3.select("#rootDisplay")
         .append("g")
@@ -477,6 +490,9 @@ function initEffects() {
         .attr("stroke-width", 2);
 }
 
+/**
+ * Draw the input data onto the image of the input.
+ */
 function drawInputData() {
     const updateSet = d3.select("#inputImg")
         .selectAll(".cellColor")
@@ -504,6 +520,9 @@ function drawInputData() {
         });
 }
 
+/**
+ * Draw the output data onto the image of the output.
+ */
 function drawOutputData() {
     const updateSet = d3.select("#outputImg")
         .selectAll(".cellColor")
@@ -531,6 +550,9 @@ function drawOutputData() {
         });
 }
 
+/**
+ * Draw the kernel data onto the image of the kernel.
+ */
 function drawKernelData() {
     let updateColor = d3.select("#kernelImg")
         .selectAll(".cellColor")
@@ -567,6 +589,11 @@ function drawKernelData() {
         .text(d => d);
 }
 
+/**
+ * Draw the effects(lines, highlights) onto the page. Because the effects need to be on top, a reference
+ * to the real effect is deleted and then recreated every time in case new shapes have
+ * been added to the SVG.
+ */
 function drawEffects() {
     removeEffects();
 
@@ -585,6 +612,10 @@ function drawEffects() {
         .attr("id", "connectingLineDisplay")
         .attr("xlink:href", "#connectingLine");
 }
+
+/**
+ * Remove the effects(lines, highlights) from the SVG.
+ */
 function removeEffects() {
     d3.select("#inputHighlightDisplay")
         .remove();
@@ -594,6 +625,9 @@ function removeEffects() {
         .remove();
 }
 
+/**
+ * This function will run when the document has loaded.
+ */
 function main() {
     loadImage();
 
