@@ -1,35 +1,94 @@
 import * as d3 from "d3";
 import * as tf from '@tensorflow/tfjs'
 
-const canvas = document.getElementById('input-image');
-const context = canvas.getContext('2d');
+// Should the input matrix be padded
+var PADDED = true;
 
-let pixelValues = [];
+// Cell border
+const borderWidth = 1;
 
-for (let i = 0; i < canvas.height; i++) {
-    pixelValues[i] = [];
-}
+// Padding between images
+const spaceBetween = 40;
 
-function grayScaleImage() {
-    var imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+// Width and height of each "pixel"
+const cellWidth = 25;
+const cellHeight = 25;
 
-    for (let i = 0; i < imgData.data.length; i += 4) {
-        let x = (i / 4) % canvas.width;
-        let y = Math.floor((i / 4) / canvas.width);
-        pixelValues[y][x] = imgData.data[i] / 256.0;
+// Input image size
+const inputWidth = 28;
+const inputHeight = 28;
+
+// Kernel size
+const kernelWidth = 3;
+const kernelHeight = 3;
+
+// The loss in size from padding
+const inputWidthLoss = PADDED ?
+    0 :
+    Math.floor((kernelWidth - 1) / 2);
+const inputHeightLoss = PADDED ?
+    0 :
+    Math.floor((kernelHeight - 1) / 2);
+
+// Output image size
+const outputWidth = PADDED ?
+    inputWidth :
+    inputWidth - 2 * inputWidthLoss;
+const outputHeight = PADDED ?
+    inputHeight :
+    inputHeight - 2 * inputHeightLoss;
+
+// Currently highlighted selection
+let selectionX = null;
+let selectionY = null;
+
+let image = tf.zeros([1, 28, 28, 1]);
+let filteredImg = tf.zeros([outputWidth, outputHeight]);
+let kernel = tf.zeros([kernelWidth, kernelHeight, 1, 1]);
+
+const x_scale = d3.scaleLinear()
+            .domain([0, inputWidth - 1])
+            .range([0, cellWidth * (inputWidth - 1)])
+const y_scale = d3.scaleLinear()
+            .domain([0, inputHeight - 1])
+            .range([0, cellHeight * (inputHeight - 1)])
+const color_scale =
+            d3.scaleLinear()
+                .domain([0, 1])
+                .range([1, 0])
+
+function loadImage() {
+    const canvas = document.getElementById('input-image');
+    const context = canvas.getContext('2d');
+
+    const pixelValues = [];
+
+    for (let i = 0; i < canvas.height; i++) {
+        pixelValues[i] = [];
     }
 
-    display();
-}
+    function grayScaleImage() {
+        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
 
-const base_image = new Image();
-base_image.onload = function(){
-    context.drawImage(base_image, 0, 0);
-    grayScaleImage();
-}
+        for (let i = 0; i < imgData.data.length; i += 4) {
+            let x = (i / 4) % canvas.width;
+            let y = Math.floor((i / 4) / canvas.width);
+            pixelValues[y][x] = grayToFloat(d3.rgb(imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]));
+        }
 
-base_image.crossOrigin = "Anonymous";
-base_image.src = 'https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/michan4-v1/Images/0.png';
+        image = tf.reshape(tf.tensor(pixelValues), [1, 28, 28, 1]);
+        updateData();
+    }
+
+    const base_image = new Image();
+    base_image.onload = function(){
+        context.drawImage(base_image, 0, 0);
+        grayScaleImage();
+    }
+
+    base_image.crossOrigin = "Anonymous";
+    base_image.src = 'https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/michan4-v1/Images/0.png';
+}
 
 /*
 function rand_img(m, n) {
@@ -189,10 +248,18 @@ svg.selectAll("rect")
 /**
  * Returns an RGB color of gray accosiated with the floated gray value.
  * 
- * @param {number} d A value [0, 1] representing a shade of gray
+ * @param {number} f A value [0, 1] representing a shade of gray
  */
-function gray(d) {
-    return d === undefined ? "white" : d3.rgb(d * 255, d * 255, d * 255)
+function floatToGray(f) {
+    return d3.rgb(f * 255, f * 255, f * 255);
+}
+/**
+ * Returns a float [0, 1] representing the shade of gray passed in.
+ * 
+ * @param {RGBColor} rgb A d3 rgb representing a shade of gray
+ */
+function grayToFloat(rgb) {
+    return ((rgb.r + rgb.g + rgb.b) / 3.0) / 255.0;
 }
 
 /**
@@ -202,7 +269,7 @@ function gray(d) {
  * @param {number} h height
  * @param {number} c channels
  */
-function rand_img_tensor(w, h, c) {
+function randImgTensor(w, h, c) {
     return tf.tensor([[...Array(w)].map(() => [...Array(h)].map(() => [...Array(c)].map(() => Math.random())))]);
 }
 
@@ -241,7 +308,6 @@ function createConv(inShape, kernel, stride, dialation, padded) {
     });
 }
 
-function display() {
 /**
  * Updates display with new filter data.
  */
@@ -268,14 +334,10 @@ function updateData() {
     const convLayer = createConv([inputWidth, inputHeight, 1], kernel, 1, 1, PADDED);
     filteredImg = convLayer.apply(image);
 
-    d3.select("#outputImg")
-        .selectAll(".cellColor")
-        .data(tensorToFlat(filteredImg))
-        .attr("fill", d => gray(color_scale(d)));
-    d3.select("#kernelImg")
-        .selectAll(".cellText")
-        .data(tensorToFlat(kernel))
-        .text(d => d);
+    drawInputData();
+    drawOutputData();
+    drawKernelData();
+    drawEffects();
 }
 
 /**
@@ -295,76 +357,13 @@ function updateSelection() {
                 .attr("x", (selectionX - 1) * cellWidth - borderWidth)
                 .attr("y", (selectionY - 1) * cellHeight - borderWidth);
         }
+        d3.select("#connectingLine")
+            .attr("x1", (kernelWidth + selectionX) * cellWidth + spaceBetween + 3 * borderWidth + cellWidth / 2)
+            .attr("y1", (selectionY) * cellHeight + borderWidth + cellHeight / 2)
+            .attr("x2", (kernelWidth + inputWidth + selectionX) * cellWidth + spaceBetween * 2 + 5 * borderWidth + cellWidth / 2)
+            .attr("y2", (selectionY) * cellHeight + borderWidth + cellHeight / 2);
     }
 }
-
-// Should the input matrix be padded
-const PADDED = true;
-
-// Currently highlighted selection
-let selectionX = null;
-let selectionY = null;
-
-// Input image size
-const inputWidth = 28;
-const inputHeight = 28;
-
-// Kernel size
-const kernelWidth = 3;
-const kernelHeight = 3;
-
-// The loss in size from padding
-const inputWidthLoss = PADDED ?
-    0 :
-    Math.floor((kernelWidth - 1) / 2);
-const inputHeightLoss = PADDED ?
-    0 :
-    Math.floor((kernelHeight - 1) / 2);
-
-// Output image size
-const outputWidth = PADDED ?
-    inputWidth :
-    inputWidth - 2 * inputWidthLoss;
-const outputHeight = PADDED ?
-    inputHeight :
-    inputHeight - 2 * inputHeightLoss;
-
-let image = rand_img_tensor(inputWidth, inputHeight, 1);
-image = tf.reshape(tf.tensor(pixelValues), [1, 28, 28, 1]);
-let filteredImg = tf.zeros([outputWidth, outputHeight]);
-let kernel = tf.zeros([kernelWidth, kernelHeight, 1, 1]);
-
-// Cell border
-const borderWidth = 1;
-
-// Padding between images
-const spaceBetween = 40;
-
-// Width and height of each "pixel"
-const cellWidth = 25;
-const cellHeight = 25;
-
-const x_scale = d3.scaleLinear()
-            .domain([0, inputWidth - 1])
-            .range([0, cellWidth * (inputWidth - 1)])
-const y_scale = d3.scaleLinear()
-            .domain([0, inputHeight - 1])
-            .range([0, cellHeight * (inputHeight - 1)])
-const color_scale =
-            d3.scaleLinear()
-                .domain([0, 1])
-                .range([1, 0])
-
-d3.select(":root").style("--borderWidth", `${borderWidth}px`);
-d3.select(":root").style("--borderOffset", `${-borderWidth}px`);
-
-d3.select(":root").style("--fontSize", `${Math.min(cellHeight, cellWidth) / 2}px`);
-
-initSVG();
-initKernelImg();
-initInputImg();
-initOutputImg();
-initEffects();
 
 function initSVG() {
     d3.select("body")
@@ -397,27 +396,6 @@ function initInputImg() {
     const inputMask = inputImg.append("defs")
         .append("clipPath").attr("id", "inputImgMask")
         .append("use").attr("xlink:href", "#inputOutline");
-    // Cell contents
-    const inputCells = inputImg.selectAll(".input")
-        .data(tensorToFlat(image))
-        .enter()
-        .append("rect")
-        .attr("x", function(_, i) {
-            return x_scale(i % inputHeight)
-        })
-        .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / inputHeight))
-        })
-        .attr("width", cellWidth)
-        .attr("height", cellHeight)
-        .attr("fill", d => gray(color_scale(d)))
-        .classed("outlined", true)
-        .classed("cellColor", true)
-        .on("mouseover", (_, i) => {
-            selectionX = i % inputHeight;
-            selectionY = Math.floor(i / inputHeight);
-            updateSelection();
-        });
 }
 
 function initOutputImg() {
@@ -441,26 +419,6 @@ function initOutputImg() {
     const outputMask = outputImg.append("defs")
         .append("clipPath").attr("id", "outputImgMask")
         .append("use").attr("xlink:href", "#outputOutline");
-    // Cell contents
-    const outputCells = outputImg.selectAll(".output")
-        .data(tensorToFlat(filteredImg))
-        .enter()
-        .append("rect")
-        .attr("x", function(_, i) {
-            return x_scale(i % outputHeight)
-        })
-        .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / outputHeight))
-        })
-        .attr("width", cellWidth)
-        .attr("height", cellHeight)
-        .classed("outlined", true)
-        .classed("cellColor", true)
-        .on("mouseover", (_, i) => {
-            selectionX = i % outputHeight + inputWidthLoss;
-            selectionY = Math.floor(i / outputHeight) + inputHeightLoss;
-            updateSelection();
-        });
 }
 
 function initKernelImg() {
@@ -484,38 +442,13 @@ function initKernelImg() {
     const kernelMask = kernelImg.append("defs")
         .append("clipPath").attr("id", "kernelImgMask")
         .append("use").attr("xlink:href", "#kernelOutline");
-    // Cell contents
-    const kernelCells = kernelImg.selectAll(".kernel")
-        .data(tensorToFlat(kernel))
-        .enter()
-        .append("g");
-    // Cell color
-    const kernelColor = kernelCells.append("rect")
-        .attr("x", function(_, i) {
-            return x_scale(i % kernelHeight)
-        })
-        .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / kernelHeight))
-        })
-        .attr("width", cellWidth)
-        .attr("height", cellHeight)
-        .attr("fill", "white")
-        .classed("outlined", true)
-        .classed("cellColor", true);
-    // Cell text
-    const kernelText = kernelCells.append("text")
-        .attr("x", function(_, i) {
-            return x_scale(i % kernelHeight) + Math.floor(cellWidth / 2)
-        })
-        .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / kernelHeight)) + Math.floor(cellHeight / 2)
-        })
-        .classed("cellText", true);
 }
 
 function initEffects() {
-    const inputHighlight = d3.select("#inputImg")
-        .append("rect")
+    const effects = d3.select("#rootDisplay")
+        .append("g")
+        .attr("visibility", "hidden")
+    const inputHighlight = effects.append("rect")
         .attr("id", "inputHighlight")
         .attr("pointer-events", "none")
         .attr("x", -1000)
@@ -524,8 +457,7 @@ function initEffects() {
         .attr("height", cellHeight * kernelHeight + borderWidth * 2)
         .attr("fill", "yellow")
         .attr("fill-opacity", 0.2);
-    const outputHighlight = d3.select("#outputImg")
-        .append("rect")
+    const outputHighlight = effects.append("rect")
         .attr("id", "outputHighlight")
         .attr("pointer-events", "none")
         .attr("x", -1000)
@@ -534,10 +466,149 @@ function initEffects() {
         .attr("height", cellHeight + borderWidth * 2)
         .attr("fill", "yellow")
         .attr("fill-opacity", 0.2);
+
+    const connectingLine = effects.append("line")
+        .attr("id", "connectingLine")
+        .attr("x1", -1000)
+        .attr("x2", -1000)
+        .attr("y1", -1000)
+        .attr("y2", -1000)
+        .attr("stroke", "red")
+        .attr("stroke-width", 2);
 }
 
-updateData();
+function drawInputData() {
+    const updateSet = d3.select("#inputImg")
+        .selectAll(".cellColor")
+        .data(tensorToFlat(image));
+    // ENTER
+    const enterSet = updateSet.enter()
+        .append("rect")
+        .attr("width", cellWidth)
+        .attr("height", cellHeight)
+        .classed("outlined", true)
+        .classed("cellColor", true);
+    // UPDATE
+    updateSet.merge(enterSet)
+        .attr("x", function(_, i) {
+            return x_scale(i % inputHeight)
+        })
+        .attr("y", function(_, i) {
+            return y_scale(Math.floor(i / inputHeight))
+        })
+        .attr("fill", d => floatToGray(color_scale(d)))
+        .on("mouseover", (_, i) => {
+            selectionX = i % inputHeight;
+            selectionY = Math.floor(i / inputHeight);
+            updateSelection();
+        });
+}
+
+function drawOutputData() {
+    const updateSet = d3.select("#outputImg")
+        .selectAll(".cellColor")
+        .data(tensorToFlat(filteredImg));
+    // ENTER
+    const enterSet = updateSet.enter()
+        .append("rect")
+        .attr("width", cellWidth)
+        .attr("height", cellHeight)
+        .classed("outlined", true)
+        .classed("cellColor", true);
+    // UPDATE
+    updateSet.merge(enterSet)
+        .attr("x", function(_, i) {
+            return x_scale(i % outputHeight)
+        })
+        .attr("y", function(_, i) {
+            return y_scale(Math.floor(i / outputHeight))
+        })
+        .attr("fill", d => floatToGray(color_scale(d)))
+        .on("mouseover", (_, i) => {
+            selectionX = i % outputHeight + inputWidthLoss;
+            selectionY = Math.floor(i / outputHeight) + inputHeightLoss;
+            updateSelection();
+        });
+}
+
+function drawKernelData() {
+    let updateColor = d3.select("#kernelImg")
+        .selectAll(".cellColor")
+        .data(tensorToFlat(kernel));
+    let updateText = d3.select("#kernelImg")
+        .selectAll(".cellText")
+        .data(tensorToFlat(kernel));
+    // ENTER
+    const enterColor = updateColor.enter()
+        .append("rect")
+        .attr("width", cellWidth)
+        .attr("height", cellHeight)
+        .attr("fill", "white")
+        .classed("outlined", true)
+        .classed("cellColor", true);
+    const enterText = updateText.enter()
+        .append("text")
+        .classed("cellText", true);
+    // UPDATE
+    updateColor.merge(enterColor)
+        .attr("x", function(_, i) {
+            return x_scale(i % kernelHeight)
+        })
+        .attr("y", function(_, i) {
+            return y_scale(Math.floor(i / kernelHeight))
+        });
+    updateText.merge(enterText)
+        .attr("x", function(_, i) {
+            return x_scale(i % kernelHeight) + Math.floor(cellWidth / 2)
+        })
+        .attr("y", function(_, i) {
+            return y_scale(Math.floor(i / kernelHeight)) + Math.floor(cellHeight / 2)
+        })
+        .text(d => d);
+}
+
+function drawEffects() {
+    removeEffects();
+
+    d3.select("#inputImg")
+        .append("use")
+        .attr("id", "inputHighlightDisplay")
+        .attr("xlink:href", "#inputHighlight");
+
+    d3.select("#outputImg")
+        .append("use")
+        .attr("id", "outputHighlightDisplay")
+        .attr("xlink:href", "#outputHighlight");
+    
+    d3.select("#rootDisplay")
+        .append("use")
+        .attr("id", "connectingLineDisplay")
+        .attr("xlink:href", "#connectingLine");
+}
+function removeEffects() {
+    d3.select("#inputHighlightDisplay")
+        .remove();
+    d3.select("#outputHighlightDisplay")
+        .remove();
+    d3.select("#connectingLineDisplay")
+        .remove();
+}
+
+function main() {
+    loadImage();
+
+    initSVG();
+    initKernelImg();
+    initInputImg();
+    initOutputImg();
+    initEffects();
+}
+
+d3.select(":root").style("--borderWidth", `${borderWidth}px`);
+d3.select(":root").style("--borderOffset", `${-borderWidth}px`);
+
+d3.select(":root").style("--fontSize", `${Math.min(cellHeight, cellWidth) / 2}px`);
 
 d3.select("#filter-selection").on("change", updateData);
 
-}
+window.onload = main;
