@@ -62,6 +62,11 @@ const color_scale =
                 .domain([0, 1])
                 .range([1, 0])
 
+/**
+ * Given a url to an image, displays the image as a matrix of pixels.
+ * 
+ * @param {String} url 
+ */
 function loadImage(url) {
     const canvas = document.getElementById('input-image');
     const context = canvas.getContext('2d');
@@ -189,7 +194,7 @@ function createConv(inShape, kernel, stride, dialation, padded) {
 }
 
 /**
- * Updates display and data with new filter choice.
+ * Updates display and data with new filter and image choice.
  */
 function updateData() {
     const filter = d3.select("#filter-selection");
@@ -218,6 +223,9 @@ function updateData() {
     loadImage(image.node().value);
 }
 
+/**
+ * Refreshes the data display.
+ */
 function refreshData() {
     const convLayer = createConv([inputWidth, inputHeight, 1], kernel, 1, 1, PADDED);
     filteredImg = convLayer.apply(image);
