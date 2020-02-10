@@ -5,10 +5,6 @@ import * as config from "./config";
 import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects} from "./initSVG";
 import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat} from "./updateSVG";
 
-// Currently highlighted selection
-let selectionX;
-let selectionY;
-
 // Image data
 let image;
 let resultImg;
