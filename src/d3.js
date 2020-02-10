@@ -1,6 +1,11 @@
 import * as d3 from "d3";
 import * as tf from '@tensorflow/tfjs'
 
+// Width and height of the input and output images, in pixels. The cell
+// width and height are automatically calculated to fit this size.
+const w = 640;
+const h = 640;
+
 // Should the input matrix be padded
 var PADDED = true;
 
@@ -10,13 +15,13 @@ const borderWidth = 1;
 // Padding between images
 const spaceBetween = 40;
 
-// Width and height of each "pixel"
-const cellWidth = 25;
-const cellHeight = 25;
-
 // Input image size
 const inputWidth = 28;
 const inputHeight = 28;
+
+// Width/Height of an individual cell
+const cellWidth = w / inputWidth;
+const cellHeight = h / inputHeight;
 
 // Kernel size
 const kernelWidth = 3;
@@ -90,159 +95,33 @@ function loadImage() {
     base_image.src = 'https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/michan4-v1/Images/0.png';
 }
 
-/*
-function rand_img(m, n) {
-    return [...Array(m)].map(() => [...Array(n)].map(() => Math.random()))
+/************** TODO ******************
+function clear_output(img_size) {
+    // Set all values to 0 and colors to white
+    d3.selectAll("#output").data([...Array(img_size)].map(() => 0))
+      .attr("fill", "white")
 }
 
-function convolution(i, kernel, class_name, cell_transform) {
-    d3.selectAll("line").remove()
+function auto_conv(img_size, kernel) {
+    clear_output(img_size)
 
-    var rects = d3.selectAll("." + class_name).nodes()
-    var x = i % img_data[0].length
-    var y = Math.floor(i / img_data[0].length)
+    var i = 0
+    d3.interval
+    var interval = d3.interval(t => {
+        // Special case for start, where we can't do conv out
+        if(i > 0)
+            conv_out(i - 1, kernel)
 
-    var kernel_h = kernel.length
-    var kernel_w = kernel[0].length
+        conv_in(i, kernel)
 
-    var conv = 0
-    for (var hk = 0; hk < kernel_h; ++hk) {
-        var yk = y - (kernel_h - 1) / 2 + hk
-        if(yk < 0) {
-            continue;
+        i += 1
+        // Finished convolution, so stop
+        if (i == img_size) {
+            conv_out(i - 1, kernel)
+            interval.stop()
         }
-        else if (yk >= img_data.length) {
-            break;
-        }
-
-        for (var wk = 0; wk < kernel_w; ++wk) {
-            var xk = x - (kernel_w - 1) / 2 + wk
-
-            if (xk < 0) {
-                continue;
-            }
-            else if (xk >= img_data[0].length) {
-                break;
-            }
-
-            var idx = yk * img_data[0].length + xk
-            var cell = d3.select(rects[idx])
-            conv += cell.data()[0] * kernel[hk][wk]
-            cell_transform(cell)
-        }
-    }
-
-    var kernel_rects = d3.selectAll(".kernel").nodes()
-    var kernel_center = d3.select(kernel_rects[(kernel.length + 1) * (kernel.length - 1) / 2])
-
-    var other_rects = d3.selectAll(class_name === "input" ? ".output" : ".input").nodes()
-    var other_cur_rect = d3.select(other_rects[i])
-
-    var cur_rect = d3.select(rects[i])
-    d3.select("svg")
-        .append("line")
-        .attr("stroke", "green")
-        .attr("stroke-width", 4)
-        .attr("x1", parseFloat(cur_rect.attr("x")) + parseFloat(cur_rect.attr("width")) / 2)
-        .attr("y1", parseFloat(cur_rect.attr("y")) + parseFloat(cur_rect.attr("height")) / 2)
-        .attr("x2", parseFloat(kernel_center.attr("x")) + parseFloat(kernel_center.attr("width")) / 2)
-        .attr("y2", parseFloat(kernel_center.attr("y")) + parseFloat(kernel_center.attr("height")) / 2)
-
-    d3.select("svg")
-        .append("line")
-        .attr("stroke", "green")
-        .attr("stroke-width", 4)
-        .attr("x1", parseFloat(kernel_center.attr("x")) + parseFloat(kernel_center.attr("width")) / 2)
-        .attr("y1", parseFloat(kernel_center.attr("y")) + parseFloat(kernel_center.attr("height")) / 2)
-        .attr("x2", parseFloat(other_cur_rect.attr("x")) + parseFloat(other_cur_rect.attr("width")) / 2)
-        .attr("y2", parseFloat(other_cur_rect.attr("y")) + parseFloat(other_cur_rect.attr("height")) / 2)
-
-    if(class_name === "input") {
-        var output_rects = d3.selectAll(".output").nodes()
-        d3.select(output_rects[i]).data([conv]).attr("fill", gray(color_scale(conv)))
-    }
+    }, 100)
 }
-
-var img_data = rand_img(8, 8)
-
-var w = 640;
-var h = 640;
-var cell_padding = 4;
-
-var cellWidth = w / img_data[0].length // - cell_padding * (img_data[0].length + 1) / img_data[0].length
-var cellHeight = h / img_data.length // - cell_padding * (img_data.length + 1) / img_data.length
-
-var x_scale = d3.scaleLinear()
-            .domain([0, img_data[0].length - 1])
-            .range([cell_padding / 2, w - cellWidth - cell_padding / 2 ])
-
-var y_scale = d3.scaleLinear()
-            .domain([0, img_data.length - 1])
-            .range([cell_padding / 2, h - cellHeight - cell_padding / 2])
-
-var svg = d3.select("body")
-            .append("svg")
-            .attr("width", w * 5 / 2)
-            .attr("height", h)
-
-svg.selectAll("rect")
-
-    // Input
-    .data(img_data.flat())
-    .enter()
-    .append("rect")
-    .attr("x", function(d, i) {
-        return x_scale(i % img_data[0].length)
-    })
-    .attr("y", function(d, i) {
-        return y_scale(Math.floor(i / img_data[0].length))
-    })
-    .attr("width", cellWidth)
-    .attr("height", cellHeight)
-    .attr("fill", d => gray(color_scale(d)))
-    .attr("stroke", "gray")
-    .attr("stroke-width", cell_padding)
-    .classed("input", true)
-    .on("mouseover", (d, i) => convolution(i, kernel, "input", c => c.attr("fill", "red")))
-    .on("mouseout", (d, i) => convolution(i, kernel, "input", c => c.attr("fill", d => d3.rgb(d * 255, d * 255, d * 255))))
-    .exit()
-
-    // Output
-    .data(Array(img_data.length * img_data[0].length))
-    .enter()
-    .append("rect")
-    .attr("x", function(d, i) {
-        return 3/2 * w + x_scale(i % img_data[0].length)
-    })
-    .attr("y", function(d, i) {
-        return y_scale(Math.floor(i / img_data[0].length))
-    })
-    .attr("width", cellWidth)
-    .attr("height", cellHeight)
-    .attr("fill", "white")
-    .attr("stroke", "gray")
-    .attr("stroke-width", cell_padding)
-    .classed("output", true)
-    .on("mouseover", (d, i) => convolution(i, kernel, "output", c => c.attr("fill", "red")))
-    .on("mouseout", (d, i) => convolution(i, kernel, "output", c => c.attr("fill", d => gray(color_scale(d)))))
-    .exit()
-
-    // Kernel
-    .data(kernel.flat())
-    .enter()
-    .append("rect")
-    .attr("x", function(d, i) {
-        return 5/4*w - cellWidth * (kernel[0].length) / 2 - cell_padding / 2 + x_scale(i % kernel[0].length)
-    })
-    .attr("y", function(d, i) {
-        return y_scale(img_data.length - kernel.length + Math.floor(i / kernel[0].length))
-    })
-    .attr("width", cellWidth)
-    .attr("height", cellHeight)
-    .attr("fill", d => gray(color_scale(d)))
-    .attr("stroke", "gray")
-    .attr("stroke-width", cell_padding)
-    .classed("kernel", true)
 */
 
 /**
@@ -298,6 +177,7 @@ function createConv(inShape, kernel, stride, dialation, padded) {
     return tf.layers.conv2d({
         inputShape: inShape,
         kernelSize: kernel.shape.slice(0, 2),
+        activation: "relu",
         filters: 1,
         strides: stride,
         dilationRate: dialation,
@@ -644,5 +524,7 @@ d3.select(":root").style("--borderOffset", `${-borderWidth}px`);
 d3.select(":root").style("--fontSize", `${Math.min(cellHeight, cellWidth) / 2}px`);
 
 d3.select("#filter-selection").on("change", updateData);
+
+d3.select("#auto-conv").on("click", () => auto_conv(img_data.length * img_data[0].length, kernel))
 
 window.onload = main;
