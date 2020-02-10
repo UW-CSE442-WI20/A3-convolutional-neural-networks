@@ -133,33 +133,35 @@ export function drawOutputData(resultImg) {
  * Draw the kernel data onto the image of the kernel.
  */
 export function drawKernelData(kernel) {
-    let updateColor = d3.select("#kernelImg")
-        .selectAll(".cellColor")
-        .data(tensorToFlat(kernel));
-    let updateText = d3.select("#kernelImg")
-        .selectAll(".cellText")
+    const updateSet = d3.select("#kernelImg")
+        .selectAll(".cellWrapper")
         .data(tensorToFlat(kernel));
     // ENTER
-    const enterColor = updateColor.enter()
-        .append("rect")
+    const enterSet = updateSet.enter()
+        .append("g")
+        .classed("cellWrapper", true);
+    enterSet.append("rect")
         .attr("width", config.cellWidth)
         .attr("height", config.cellHeight)
         .attr("fill", "white")
         .attr("stroke", config.borderColor)
         .attr("stroke-width", config.borderWidth)
         .classed("cellColor", true);
-    const enterText = updateText.enter()
-        .append("text")
+    enterSet.append("text")
         .classed("cellText", true);
     // UPDATE
-    updateColor.merge(enterColor)
+    d3.select("#kernelImg")
+        .selectAll(".cellColor")
+        .data(tensorToFlat(kernel))
         .attr("x", function(_, i) {
             return x_scale(i % config.kernelWidth)
         })
         .attr("y", function(_, i) {
             return y_scale(Math.floor(i / config.kernelWidth))
         });
-    updateText.merge(enterText)
+    d3.select("#kernelImg")
+        .selectAll(".cellText")
+        .data(tensorToFlat(kernel))
         .attr("x", function(_, i) {
             return x_scale(i % config.kernelWidth) + Math.floor(config.cellWidth / 2)
         })
