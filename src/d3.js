@@ -7,10 +7,13 @@ const w = 640;
 const h = 640;
 
 // Should the input matrix be padded
-var PADDED = true;
+const PADDED = true;
 
 // Cell border
-const borderWidth = 1;
+const borderWidth = 2;
+const borderColor = "gray";
+const highlightOutlineWidth = borderWidth * 2;
+const highlightOutlineColor = "red";
 
 // Padding between images
 const spaceBetween = 40;
@@ -92,7 +95,7 @@ function loadImage() {
     }
 
     base_image.crossOrigin = "Anonymous";
-    base_image.src = 'https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/michan4-v1/Images/0.png';
+    base_image.src = 'https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/0.png';
 }
 
 /************** TODO ******************
@@ -226,23 +229,24 @@ function updateData() {
 function updateSelection() {
     if (selectionX !== null && selectionY !== null) {
         d3.select("#inputHighlight")
-            .attr("x", (selectionX - 1) * cellWidth - borderWidth)
-            .attr("y", (selectionY - 1) * cellHeight - borderWidth);
+            .attr("x", (selectionX - 1) * cellWidth)
+            .attr("y", (selectionY - 1) * cellHeight);
         if (PADDED) {
             d3.select("#outputHighlight")
-                .attr("x", (selectionX) * cellWidth - borderWidth)
-                .attr("y", (selectionY) * cellHeight - borderWidth);
+                .attr("x", (selectionX) * cellWidth)
+                .attr("y", (selectionY) * cellHeight);
         } else {
             d3.select("#outputHighlight")
-                .attr("x", (selectionX - 1) * cellWidth - borderWidth)
-                .attr("y", (selectionY - 1) * cellHeight - borderWidth);
+                .attr("x", (selectionX - 1) * cellWidth)
+                .attr("y", (selectionY - 1) * cellHeight);
         }
         d3.select("#connectingLine")
-            .attr("x1", (kernelWidth + selectionX) * cellWidth + spaceBetween + 3 * borderWidth + cellWidth / 2)
-            .attr("y1", (selectionY) * cellHeight + borderWidth + cellHeight / 2)
-            .attr("x2", (kernelWidth + inputWidth + selectionX) * cellWidth + spaceBetween * 2 + 5 * borderWidth + cellWidth / 2)
-            .attr("y2", (selectionY) * cellHeight + borderWidth + cellHeight / 2);
+            .attr("x1", (kernelWidth + selectionX) * cellWidth + spaceBetween + cellWidth / 2)
+            .attr("y1", (selectionY) * cellHeight + cellHeight / 2)
+            .attr("x2", (kernelWidth + inputWidth + selectionX) * cellWidth + spaceBetween * 2 + cellWidth / 2)
+            .attr("y2", (selectionY) * cellHeight + cellHeight / 2);
     }
+    drawEffects();
 }
 
 /**
@@ -252,8 +256,8 @@ function initSVG() {
     d3.select("body")
         .append("svg")
         .attr("id", "rootDisplay")
-        .attr("width", (inputWidth + kernelWidth + outputWidth) * cellWidth + spaceBetween * 2 + borderWidth * 6)
-        .attr("height", inputHeight * cellHeight + borderWidth * 2);
+        .attr("width", (inputWidth + kernelWidth + outputWidth) * cellWidth + spaceBetween * 2 + borderWidth)
+        .attr("height", inputHeight * cellHeight + borderWidth);
 }
 
 /**
@@ -265,17 +269,18 @@ function initInputImg() {
         .append("g")
         .attr("id", "inputImg")
         .attr("clip-path", "url(#inputImgMask)")
-        .attr("transform", `translate(${kernelWidth * cellWidth + spaceBetween + 3 * borderWidth}, 
-                                      ${borderWidth})`);
+        .attr("transform", `translate(${kernelWidth * cellWidth + spaceBetween + borderWidth / 2}, 
+                                      ${borderWidth / 2})`);
     // Box around image(used for mask and outline)
     const inputOutline = inputImg.append("rect")
         .attr("id", "inputOutline")
-        .attr("x", -borderWidth)
-        .attr("y", -borderWidth)
-        .attr("width", cellWidth * inputWidth + 2 * borderWidth)
-        .attr("height", cellHeight * inputHeight + 2 * borderWidth)
+        .attr("x", -borderWidth / 2)
+        .attr("y", -borderWidth / 2)
+        .attr("width", cellWidth * inputWidth + borderWidth)
+        .attr("height", cellHeight * inputHeight + borderWidth)
         .attr("fill-opacity", 0)
-        .classed("outlined", true);
+        .attr("stroke", borderColor)
+        .attr("stroke-width", borderWidth);
     // Mask (uses outline of image)
     const inputMask = inputImg.append("defs")
         .append("clipPath").attr("id", "inputImgMask")
@@ -291,17 +296,18 @@ function initOutputImg() {
         .append("g")
         .attr("id", "outputImg")
         .attr("clip-path", "url(#outputImgMask)")
-        .attr("transform", `translate(${(inputWidth + kernelWidth) * cellWidth + spaceBetween * 2 + borderWidth * 5}, 
-                                      ${inputHeightLoss * cellHeight + borderWidth})`);
+        .attr("transform", `translate(${(inputWidth + kernelWidth) * cellWidth + spaceBetween * 2 + borderWidth / 2}, 
+                                      ${inputHeightLoss * cellHeight + borderWidth / 2})`);
     // Box around image(used for mask and outline)
     const outputOutline = outputImg.append("rect")
         .attr("id", "outputOutline")
-        .attr("x", -borderWidth)
-        .attr("y", -borderWidth)
-        .attr("width", cellWidth * outputWidth + 2 * borderWidth)
-        .attr("height", cellHeight * outputHeight + 2 * borderWidth)
+        .attr("x", -borderWidth / 2)
+        .attr("y", -borderWidth / 2)
+        .attr("width", cellWidth * outputWidth + borderWidth)
+        .attr("height", cellHeight * outputHeight + borderWidth)
         .attr("fill-opacity", 0)
-        .classed("outlined", true);
+        .attr("stroke", borderColor)
+        .attr("stroke-width", borderWidth);
     // Mask (uses outline of image)
     const outputMask = outputImg.append("defs")
         .append("clipPath").attr("id", "outputImgMask")
@@ -317,17 +323,18 @@ function initKernelImg() {
         .append("g")
         .attr("id", "kernelImg")
         .attr("clip-path", "url(#kernelImgMask)")
-        .attr("transform", `translate(${borderWidth}, 
-                                      ${borderWidth/* **Kernel at bottom** (inputHeight - kernelHeight) * cellHeight + borderWidth*/})`);
+        .attr("transform", `translate(${borderWidth / 2}, 
+                                      ${borderWidth / 2/* **Kernel at bottom** (inputHeight - kernelHeight) * cellHeight + borderWidth / 2*/})`);
     // Box around image(used for mask and outline)
     const kernelOutline = kernelImg.append("rect")
         .attr("id", "kernelOutline")
-        .attr("x", -borderWidth)
-        .attr("y", -borderWidth)
-        .attr("width", cellWidth * kernelWidth + 2 * borderWidth)
-        .attr("height", cellHeight * kernelHeight + 2 * borderWidth)
+        .attr("x", -borderWidth / 2)
+        .attr("y", -borderWidth / 2)
+        .attr("width", cellWidth * kernelWidth + borderWidth)
+        .attr("height", cellHeight * kernelHeight + borderWidth)
         .attr("fill-opacity", 0)
-        .classed("outlined", true);
+        .attr("stroke", borderColor)
+        .attr("stroke-width", borderWidth);
     // Mask (uses outline of image)
     const kernelMask = kernelImg.append("defs")
         .append("clipPath").attr("id", "kernelImgMask")
@@ -346,22 +353,25 @@ function initEffects() {
         .attr("pointer-events", "none")
         .attr("x", -1000)
         .attr("y", -1000)
-        .attr("width", cellWidth * kernelWidth + borderWidth * 2)
-        .attr("height", cellHeight * kernelHeight + borderWidth * 2)
-        .attr("fill", "yellow")
-        .attr("fill-opacity", 0.2);
+        .attr("width", cellWidth * kernelWidth)
+        .attr("height", cellHeight * kernelHeight)
+        .attr("fill-opacity", 0)
+        .attr("stroke", highlightOutlineColor)
+        .attr("stroke-width", highlightOutlineWidth);
     const outputHighlight = effects.append("rect")
         .attr("id", "outputHighlight")
         .attr("pointer-events", "none")
         .attr("x", -1000)
         .attr("y", -1000)
-        .attr("width", cellWidth + borderWidth * 2)
-        .attr("height", cellHeight + borderWidth * 2)
-        .attr("fill", "yellow")
-        .attr("fill-opacity", 0.2);
+        .attr("width", cellWidth)
+        .attr("height", cellHeight)
+        .attr("fill-opacity", 0)
+        .attr("stroke", highlightOutlineColor)
+        .attr("stroke-width", highlightOutlineWidth);
 
     const connectingLine = effects.append("line")
         .attr("id", "connectingLine")
+        .attr("pointer-events", "none")
         .attr("x1", -1000)
         .attr("x2", -1000)
         .attr("y1", -1000)
@@ -382,7 +392,8 @@ function drawInputData() {
         .append("rect")
         .attr("width", cellWidth)
         .attr("height", cellHeight)
-        .classed("outlined", true)
+        .attr("stroke", borderColor)
+        .attr("stroke-width", borderWidth)
         .classed("cellColor", true);
     // UPDATE
     updateSet.merge(enterSet)
@@ -397,7 +408,8 @@ function drawInputData() {
             selectionX = i % inputHeight;
             selectionY = Math.floor(i / inputHeight);
             updateSelection();
-        });
+        })
+        .on("mouseout", removeEffects);
 }
 
 /**
@@ -412,7 +424,8 @@ function drawOutputData() {
         .append("rect")
         .attr("width", cellWidth)
         .attr("height", cellHeight)
-        .classed("outlined", true)
+        .attr("stroke", borderColor)
+        .attr("stroke-width", borderWidth)
         .classed("cellColor", true);
     // UPDATE
     updateSet.merge(enterSet)
@@ -427,7 +440,8 @@ function drawOutputData() {
             selectionX = i % outputHeight + inputWidthLoss;
             selectionY = Math.floor(i / outputHeight) + inputHeightLoss;
             updateSelection();
-        });
+        })
+        .on("mouseout", removeEffects);
 }
 
 /**
@@ -446,7 +460,8 @@ function drawKernelData() {
         .attr("width", cellWidth)
         .attr("height", cellHeight)
         .attr("fill", "white")
-        .classed("outlined", true)
+        .attr("stroke", borderColor)
+        .attr("stroke-width", borderWidth)
         .classed("cellColor", true);
     const enterText = updateText.enter()
         .append("text")
@@ -517,9 +532,6 @@ function main() {
     initOutputImg();
     initEffects();
 }
-
-d3.select(":root").style("--borderWidth", `${borderWidth}px`);
-d3.select(":root").style("--borderOffset", `${-borderWidth}px`);
 
 d3.select(":root").style("--fontSize", `${Math.min(cellHeight, cellWidth) / 2}px`);
 

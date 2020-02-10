@@ -1,15 +1,7 @@
 :root {
-  --borderWidth: 0px;
-  --borderOffset: 0px;
   --fontSize: 0px;
 }
 
-.outlined {
-  outline-color: rgb(100, 100, 100);;
-  outline-style: solid;
-  outline-width: var(--borderWidth);
-  outline-offset: var(--borderOffset);
-}
 .cellText {
   text-align: center;
   text-anchor: middle;
