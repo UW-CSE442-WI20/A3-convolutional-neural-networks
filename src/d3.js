@@ -82,7 +82,7 @@ function loadImage() {
         }
 
         image = tf.reshape(tf.tensor(pixelValues), [1, 28, 28, 1]);
-        updateData();
+        refreshData();
     }
 
     const base_image = new Image();
@@ -210,7 +210,13 @@ function updateData() {
                                 [-1, -2, -1]]);
             break;
     }
+
     kernel = tf.reshape(kernel, [kernelWidth, kernelHeight, 1, 1]);
+
+    loadImage();
+}
+
+function refreshData() {
     const convLayer = createConv([inputWidth, inputHeight, 1], kernel, 1, 1, PADDED);
     filteredImg = convLayer.apply(image);
 
@@ -509,13 +515,14 @@ function removeEffects() {
  * This function will run when the document has loaded.
  */
 function main() {
-    loadImage();
 
     initSVG();
     initKernelImg();
     initInputImg();
     initOutputImg();
     initEffects();
+
+    updateData();    
 }
 
 d3.select(":root").style("--borderWidth", `${borderWidth}px`);
