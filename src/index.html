@@ -3,26 +3,17 @@
   <head>
     <meta charset="UTF-8">
     <title>Convolutional Neural Networks</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
   </head>
   <body>
-    <canvas id="input-image" width="28px" height="28px"></canvas>
-    <!--
-    <img src="../Images/0.png" alt="MNIST 0">
-    <img src="../Images/1.png" alt="MNIST 1">
-    <img src="../Images/2.png" alt="MNIST 2">
-    <img src="../Images/3.png" alt="MNIST 3">
-    <img src="../Images/4.png" alt="MNIST 4">
-    <img src="../Images/5.png" alt="MNIST 5">
-    <img src="../Images/6.png" alt="MNIST 6">
-    <img src="../Images/7.png" alt="MNIST 7">
-    <img src="../Images/8.png" alt="MNIST 8">
-    <img src="../Images/9.png" alt="MNIST 9">
-    -->
-
+    <canvas hidden id="input-image" width="28px" height="28px"></canvas>
     <select id="filter-selection">
       <option selected value="identity">Identity</option>
-      <option value="sobel">Sobel</option>
+      <option value="x_sobel">Horizontal Sobel</option>
+      <option value="y_sobel">Vertical Sobel</option>
     </select>
+
+    <button type="button" id="auto-conv">Auto Conv</button>
 
     <script src="./d3.js"></script>
   </body>
