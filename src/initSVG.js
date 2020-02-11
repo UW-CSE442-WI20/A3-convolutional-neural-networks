@@ -9,8 +9,8 @@ export function initSVG() {
     d3.select("body")
         .append("svg")
         .attr("id", "rootDisplay")
-        .attr("width", (config.inputWidth + config.kernelWidth + config.outputWidth) * config.cellWidth + config.spaceBetween * 2 + config.borderWidth)
-        .attr("height", config.inputHeight * config.cellHeight + config.borderWidth);
+        .attr("width", 2 * config.img_width + config.spaceBetween + config.borderWidth)
+        .attr("height", config.img_height + config.borderWidth);
 }
 
 /**
@@ -22,7 +22,7 @@ export function initInputImg() {
         .append("g")
         .attr("id", "inputImg")
         .attr("clip-path", "url(#inputImgMask)")
-        .attr("transform", `translate(${config.kernelWidth * config.cellWidth + config.spaceBetween + config.borderWidth / 2}, 
+        .attr("transform", `translate(${config.borderWidth / 2},
                                       ${config.borderWidth / 2})`);
     // Box around image(used for mask and outline)
     const inputOutline = inputImg.append("rect")
@@ -32,8 +32,7 @@ export function initInputImg() {
         .attr("width", config.cellWidth * config.inputWidth + config.borderWidth)
         .attr("height", config.cellHeight * config.inputHeight + config.borderWidth)
         .attr("fill-opacity", 0)
-        .attr("stroke", config.borderColor)
-        .attr("stroke-width", config.borderWidth);
+
     // Mask (uses outline of image)
     const inputMask = inputImg.append("defs")
         .append("clipPath").attr("id", "inputImgMask")
@@ -49,7 +48,7 @@ export function initOutputImg() {
         .append("g")
         .attr("id", "outputImg")
         .attr("clip-path", "url(#outputImgMask)")
-        .attr("transform", `translate(${(config.inputWidth + config.kernelWidth) * config.cellWidth + config.spaceBetween * 2 + config.borderWidth / 2}, 
+        .attr("transform", `translate(${config.img_width + config.spaceBetween + config.borderWidth / 2},
                                       ${config.inputHeightLoss * config.cellHeight + config.borderWidth / 2})`);
     // Box around image(used for mask and outline)
     const outputOutline = outputImg.append("rect")
@@ -59,8 +58,7 @@ export function initOutputImg() {
         .attr("width", config.cellWidth * config.outputWidth + config.borderWidth)
         .attr("height", config.cellHeight * config.outputHeight + config.borderWidth)
         .attr("fill-opacity", 0)
-        .attr("stroke", config.borderColor)
-        .attr("stroke-width", config.borderWidth);
+
     // Mask (uses outline of image)
     const outputMask = outputImg.append("defs")
         .append("clipPath").attr("id", "outputImgMask")
@@ -76,8 +74,8 @@ export function initKernelImg() {
         .append("g")
         .attr("id", "kernelImg")
         .attr("clip-path", "url(#kernelImgMask)")
-        .attr("transform", `translate(${config.borderWidth / 2}, 
-                                      ${config.borderWidth / 2/* **Kernel at bottom** (inputHeight - kernelHeight) * cellHeight + borderWidth / 2*/})`);
+        .attr("transform", `translate(${config.img_width + config.spaceBetween / 2 - config.cellWidth * (config.kernelWidth) / 2 +  config.borderWidth / 2},
+                                      ${config.img_height - config.cellHeight * config.kernelHeight + config.borderWidth / 2})`);
     // Box around image(used for mask and outline)
     const kernelOutline = kernelImg.append("rect")
         .attr("id", "kernelOutline")
@@ -86,8 +84,7 @@ export function initKernelImg() {
         .attr("width", config.cellWidth * config.kernelWidth + config.borderWidth)
         .attr("height", config.cellHeight * config.kernelHeight + config.borderWidth)
         .attr("fill-opacity", 0)
-        .attr("stroke", config.borderColor)
-        .attr("stroke-width", config.borderWidth);
+
     // Mask (uses outline of image)
     const kernelMask = kernelImg.append("defs")
         .append("clipPath").attr("id", "kernelImgMask")
@@ -118,9 +115,15 @@ export function initEffects() {
         .attr("stroke", config.highlightOutlineColor)
         .attr("stroke-width", config.highlightOutlineWidth);
 
-    const connectingLine = effects.append("line")
-        .attr("id", "connectingLine")
-        .attr("pointer-events", "none")
-        .attr("stroke", "red")
-        .attr("stroke-width", 2);
+    // Need a total of 8 connecting lines, 4 for each corner of the input to kernel lines
+    // and 4 for the kernel to output lines
+    for (let i = 0; i < 8; ++i) {
+        const connectingLine = effects.append("line")
+            .attr("id", "connectingLine" + "-" + i)
+            .attr("pointer-events", "none")
+            .attr("stroke-opacity", 0.8)
+            .attr("stroke-dasharray", 4)
+            .attr("stroke", "red")
+            .attr("stroke-width", config.borderWidth);
+    }
 }
