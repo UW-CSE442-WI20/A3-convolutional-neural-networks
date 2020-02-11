@@ -19,12 +19,31 @@ export function updateSelection(selectionX, selectionY) {
             .attr("x", x_scale(selectionX - 1))
             .attr("y", y_scale(selectionY - 1));
     }
-    d3.select("#connectingLine")
-        .attr("x1", x_scale(config.kernelWidth + selectionX) + config.spaceBetween + config.cellWidth / 2)
-        .attr("y1", y_scale(selectionY) + config.cellHeight / 2)
-        .attr("x2", x_scale(config.kernelWidth + config.inputWidth + selectionX) + config.spaceBetween * 2 + config.cellWidth / 2)
-        .attr("y2", y_scale(selectionY) + config.cellHeight / 2);
-    
+
+    for (let i = 0; i < 4; ++i) {
+        // Trick to do all of this in one loop. Generates -1 -1; -1, 1; 1, -1; 1, 1.
+        // These are used to calculate the offsets to the corners from the center of the cell
+        let sign_x = 2 * (i & 1) - 1
+        let sign_y = 2 * ((i >> 1) & 1) - 1
+
+        let x_offset = (1 + sign_x) * config.cellWidth / 2 + sign_x * (config.kernelWidth - 1) / 2 * config.cellWidth
+        let y_offset = (1 + sign_y) * config.cellHeight / 2 + sign_y * (config.kernelWidth - 1) / 2 * config.cellWidth
+
+        // Connect input with kernel
+        d3.select("#connectingLine-" + i)
+            .attr("x1", x_scale(selectionX) + x_offset)
+            .attr("y1", y_scale(selectionY) + y_offset)
+            .attr("x2", config.img_width + config.spaceBetween / 2 - config.cellWidth / 2 + x_offset)
+            .attr("y2", config.img_height - config.cellHeight * (config.kernelHeight - 1) + y_offset);
+
+        // Connect kernel with output
+        d3.select("#connectingLine-" + (i + 4))
+            .attr("x1", config.img_width + config.spaceBetween / 2 - config.cellWidth / 2 + x_offset)
+            .attr("y1", config.img_height - config.cellHeight * (config.kernelHeight - 1) + y_offset)
+            .attr("x2", config.img_width + config.spaceBetween + x_scale(selectionX) + (sign_x + 1) / 2 * config.cellWidth)
+            .attr("y2", y_scale(selectionY) + + (sign_y + 1) / 2 * config.cellHeight);
+    }
+
     drawEffects();
 }
 
@@ -196,10 +215,13 @@ export function drawEffects() {
         .attr("id", "outputHighlightDisplay")
         .attr("xlink:href", "#outputHighlight");
     
-    d3.select("#rootDisplay")
-        .append("use")
-        .attr("id", "connectingLineDisplay")
-        .attr("xlink:href", "#connectingLine");
+    for (let i=0; i < 8; ++i) {
+        d3.select("#rootDisplay")
+            .append("use")
+            .attr("class", "connectingLineDisplay")
+            .attr("xlink:href", "#connectingLine-" + i);
+    }
+
 }
 
 /**
@@ -210,6 +232,6 @@ export function removeEffects() {
         .remove();
     d3.select("#outputHighlightDisplay")
         .remove();
-    d3.select("#connectingLineDisplay")
+    d3.selectAll(".connectingLineDisplay")
         .remove();
 }
