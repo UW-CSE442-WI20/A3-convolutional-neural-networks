@@ -40,6 +40,9 @@ function loadImage(url) {
 
     const base_image = new Image();
     base_image.onload = function(){
+        canvas.width = base_image.width;
+        canvas.height = base_image.height;
+        
         context.drawImage(base_image, 0, 0);
         grayScaleImage();
     }
