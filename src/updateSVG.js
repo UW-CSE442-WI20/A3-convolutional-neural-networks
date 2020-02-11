@@ -1,21 +1,12 @@
 import * as d3 from "d3";
-import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
-
-/**
- * Return the given tensor as a one-dimensional array.
- * 
- * @param {tf.Tensor} t
- */
-function tensorToFlat(t) {
-    return tf.reshape(t, [-1]).arraySync();
-}
+import {tensorToFlat} from "./tensor";
 
 /**
  * Updates display with new selection.
  */
-function updateSelection(selectionX, selectionY) {
+export function updateSelection(selectionX, selectionY) {
     d3.select("#inputHighlight")
         .attr("x", x_scale(selectionX - 1))
         .attr("y", y_scale(selectionY - 1));
@@ -91,7 +82,7 @@ export function grayToFloat(rgb) {
 /**
  * Draw the input data onto the image of the input.
  */
-export function drawInputData(image) {
+export function drawInputData(image, disableMouseover) {
     const updateSet = d3.select("#inputImg")
         .selectAll(".cellColor")
         .data(tensorToFlat(image));
@@ -113,15 +104,21 @@ export function drawInputData(image) {
         })
         .attr("fill", d => floatToGray(color_scale(d)))
         .on("mouseover", (_, i) => {
-            updateSelection(i % config.inputHeight, Math.floor(i / config.inputHeight));
+            if (!disableMouseover) {
+                updateSelection(i % config.inputHeight, Math.floor(i / config.inputHeight));
+            }
         })
-        .on("mouseout", removeEffects);
+        .on("mouseout", () => {
+            if (!disableMouseover) {
+                removeEffects();
+            }
+        });
 }
 
 /**
  * Draw the output data onto the image of the output.
  */
-export function drawOutputData(resultImg) {
+export function drawOutputData(resultImg, disableMouseover) {
     const updateSet = d3.select("#outputImg")
         .selectAll(".cellColor")
         .data(tensorToFlat(resultImg));
@@ -143,9 +140,15 @@ export function drawOutputData(resultImg) {
         })
         .attr("fill", d => floatToGray(color_scale(d)))
         .on("mouseover", (_, i) => {
-            updateSelection(i % config.outputHeight + config.inputWidthLoss, Math.floor(i / config.outputHeight) + config.inputHeightLoss);
+            if (!disableMouseover) {
+                updateSelection(i % config.outputHeight + config.inputWidthLoss, Math.floor(i / config.outputHeight) + config.inputHeightLoss);
+            }
         })
-        .on("mouseout", removeEffects);
+        .on("mouseout", () => {
+            if (!disableMouseover) {
+                removeEffects();
+            }
+        });
 }
 
 /**
@@ -167,25 +170,29 @@ export function drawKernelData(kernel) {
         .attr("stroke-width", config.borderWidth)
         .classed("cellColor", true);
     enterSet.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
         .classed("cellText", true);
     // UPDATE
     d3.select("#kernelImg")
         .selectAll(".cellColor")
         .data(tensorToFlat(kernel))
         .attr("x", function(_, i) {
-            return x_scale(i % config.kernelWidth)
+            return x_scale(i % config.kernelWidth);
         })
         .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / config.kernelWidth))
+            return y_scale(Math.floor(i / config.kernelWidth));
         });
     d3.select("#kernelImg")
         .selectAll(".cellText")
         .data(tensorToFlat(kernel))
         .attr("x", function(_, i) {
-            return x_scale(i % config.kernelWidth) + Math.floor(config.cellWidth / 2)
+            return x_scale(i % config.kernelWidth) + config.cellWidth / 2;
         })
         .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / config.kernelWidth)) + Math.floor(config.cellHeight / 2)
+            return y_scale(Math.floor(i / config.kernelWidth)) + config.cellHeight / 2;
         })
         .text(d => d);
 }
