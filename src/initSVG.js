@@ -31,8 +31,7 @@ export function initInputImg() {
         .attr("y", -config.borderWidth / 2)
         .attr("width", config.cellWidth * config.inputWidth + config.borderWidth)
         .attr("height", config.cellHeight * config.inputHeight + config.borderWidth)
-        .attr("fill-opacity", 0)
-
+        .attr("fill-opacity", 0);
     // Mask (uses outline of image)
     const inputMask = inputImg.append("defs")
         .append("clipPath").attr("id", "inputImgMask")
@@ -57,8 +56,7 @@ export function initOutputImg() {
         .attr("y", -config.borderWidth / 2)
         .attr("width", config.cellWidth * config.outputWidth + config.borderWidth)
         .attr("height", config.cellHeight * config.outputHeight + config.borderWidth)
-        .attr("fill-opacity", 0)
-
+        .attr("fill-opacity", 0);
     // Mask (uses outline of image)
     const outputMask = outputImg.append("defs")
         .append("clipPath").attr("id", "outputImgMask")
@@ -83,8 +81,7 @@ export function initKernelImg() {
         .attr("y", -config.borderWidth / 2)
         .attr("width", config.cellWidth * config.kernelWidth + config.borderWidth)
         .attr("height", config.cellHeight * config.kernelHeight + config.borderWidth)
-        .attr("fill-opacity", 0)
-
+        .attr("fill-opacity", 0);
     // Mask (uses outline of image)
     const kernelMask = kernelImg.append("defs")
         .append("clipPath").attr("id", "kernelImgMask")
@@ -97,7 +94,7 @@ export function initKernelImg() {
 export function initEffects() {
     const effects = d3.select("#rootDisplay")
         .append("g")
-        .attr("visibility", "hidden")
+        .attr("visibility", "hidden");
     const inputHighlight = effects.append("rect")
         .attr("id", "inputHighlight")
         .attr("pointer-events", "none")

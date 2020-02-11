@@ -3,11 +3,13 @@ import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
 import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects} from "./initSVG";
-import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat} from "./updateSVG";
+import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, updateSelection, grayToFloat} from "./updateSVG";
+import {tensorToFlat, createConv} from "./tensor";
 
 // Image data
 let image;
 let resultImg;
+let visibleImg;
 let kernel;
 
 /**
@@ -25,7 +27,10 @@ function loadImage(url) {
         pixelValues[i] = [];
     }
 
-    function grayScaleImage() {
+    const base_image = new Image();
+    base_image.onload = function(){
+        context.drawImage(base_image, 0, 0);
+
         const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
 
         for (let i = 0; i < imgData.data.length; i += 4) {
@@ -34,111 +39,66 @@ function loadImage(url) {
             pixelValues[y][x] = grayToFloat(d3.rgb(imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]));
         }
 
-        image = tf.reshape(tf.tensor(pixelValues), [1, 28, 28, 1]);
-        refreshData();
-    }
+        image = pixelValues;
 
-    const base_image = new Image();
-    base_image.onload = function(){
-        context.drawImage(base_image, 0, 0);
-        grayScaleImage();
+        refreshData();
     }
 
     base_image.crossOrigin = "Anonymous";
     base_image.src = url;
 }
 
-/************** TODO ******************
-function clear_output(img_size) {
-    // Set all values to 0 and colors to white
-    d3.selectAll("#output").data([...Array(img_size)].map(() => 0))
-      .attr("fill", "white")
-}
+/**
+ * Begin iterating through the result image, displaying the traversed pixels.
+ */
+function animateConv() {
+    d3.select("#auto-conv").on("click", () => {});
+    visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
 
-function auto_conv(img_size, kernel) {
-    clear_output(img_size)
+    drawInputData(image, true);
+    let i = 0
 
-    var i = 0
-    d3.interval
-    var interval = d3.interval(t => {
-        // Special case for start, where we can't do conv out
-        if(i > 0)
-            conv_out(i - 1, kernel)
-
-        conv_in(i, kernel)
-
-        i += 1
-        // Finished convolution, so stop
-        if (i == img_size) {
-            conv_out(i - 1, kernel)
-            interval.stop()
+    function incrementPixel() {
+        const row = i % config.outputWidth;
+        const col = Math.floor(i / config.outputWidth);
+        visibleImg[col][row] = resultImg[col][row];
+        drawOutputData(visibleImg, true);
+        updateSelection(row, col);
+        ++i;
+        if (i < config.outputHeight * config.outputWidth) {
+            setTimeout(incrementPixel, 10);
+        } else {
+            drawInputData(image, false);
+            drawOutputData(visibleImg, false);
+            d3.select("#auto-conv").on("click", animateConv);
         }
-    }, 100)
-}
-*/
+    }
 
-/**
- * Return a tensor of random floats. Output shape is [1, w, h, c].
- * 
- * @param {number} w width
- * @param {number} h height
- * @param {number} c channels
- */
-function randImgTensor(w, h, c) {
-    return tf.tensor([[...Array(w)].map(() => [...Array(h)].map(() => [...Array(c)].map(() => Math.random())))]);
+    setTimeout(incrementPixel, 10);
 }
 
-/**
- * Returns a convolution layer. To apply the convolution, call .apply(<image>).
- * 
- * @param {number[]} inShape [width, height, channels]
- * @param {number[][]} kernel 
- * @param {number} stride 
- * @param {number} dialation
- * @param {boolean} padded When true, will be zero-padded.
- * 
- * @throws If stride != 1 and dialation != 1
- */
-function createConv(inShape, kernel, stride, dialation, padded) {
-    let paddingMode = padded ? "same" : "valid";
-    return tf.layers.conv2d({
-        inputShape: inShape,
-        kernelSize: kernel.shape.slice(0, 2),
-        activation: "relu",
-        filters: 1,
-        strides: stride,
-        dilationRate: dialation,
-        trainable: false,
-        useBias: false,
-        padding: paddingMode,
-        weights: [kernel]
-    });
-}
 
 /**
  * Updates display and data with new filter and image choice.
  */
 function updateData() {
-    const filter = d3.select("#filter-selection");
-    switch (filter.node().value) {
+    switch (d3.select("#filter-selection").node().value) {
         case "identity":
-            kernel = tf.tensor([[0, 0, 0],
-                                [0, 1, 0],
-                                [0, 0, 0]]);
+            kernel = [[0, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 0]];
             break;
         case "x_sobel":
-            kernel = tf.tensor([[-1, 0, 1],
-                                [-2, 0, 2],
-                                [-1, 0, 1]]);
+            kernel = [[-1, 0, 1],
+                      [-2, 0, 2],
+                      [-1, 0, 1]];
             break;
         case "y_sobel":
-            kernel = tf.tensor([[ 1,  2,  1],
-                                [ 0,  0,  0],
-                                [-1, -2, -1]]);
+            kernel = [[ 1,  2,  1],
+                      [ 0,  0,  0], 
+                      [-1, -2, -1]];
             break;
     }
-
-    kernel = tf.reshape(kernel, [config.kernelWidth, config.kernelHeight, 1, 1]);
 
     const image = d3.select("#image-selection");
     // This is where we get the url for the Image Bois
@@ -149,11 +109,13 @@ function updateData() {
  * Refreshes the data display.
  */
 function refreshData() {
-    const convLayer = createConv([config.inputWidth, config.inputHeight, 1], kernel, 1, 1, config.PADDED);
-    resultImg = convLayer.apply(image);
+    const convLayer = createConv([config.inputWidth, config.inputHeight, 1], tf.reshape(tf.tensor(kernel), [config.kernelWidth, config.kernelHeight, 1, 1]), 1, 1, config.PADDED);
+    resultImg = tf.reshape(convLayer.apply(tf.reshape(tf.tensor(image), [1, config.inputWidth, config.inputHeight, 1])), [config.outputWidth, config.outputHeight]).arraySync();
 
-    drawInputData(image);
-    drawOutputData(resultImg);
+    visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
+
+    drawInputData(image, false);
+    drawOutputData(resultImg, false);
     drawKernelData(kernel);
 }
 
@@ -170,11 +132,9 @@ function main() {
     updateData();    
 }
 
-d3.select(":root").style("--fontSize", `${config.fontSize}px`);
-
 d3.select("#filter-selection").on("change", updateData);
 d3.select("#image-selection").on("change", updateData);
 
-d3.select("#auto-conv").on("click", () => auto_conv(img_data.length * img_data[0].length, kernel))
+d3.select("#auto-conv").on("click", animateConv);
 
 window.onload = main;

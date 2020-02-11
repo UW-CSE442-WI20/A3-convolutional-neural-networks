@@ -15,7 +15,7 @@ export const highlightOutlineColor = "red";
 // Padding between images
 export const spaceBetween = img_width / 2;
 
-export const fontSize = Math.min(cellHeight, cellWidth) * 0.5;
+export const fontSize = Math.min(cellHeight, cellWidth) * 0.9;
 
 // Input image size
 export const inputWidth = 28;
