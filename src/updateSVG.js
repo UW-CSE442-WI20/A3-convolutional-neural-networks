@@ -148,25 +148,29 @@ export function drawKernelData(kernel) {
         .attr("stroke-width", config.borderWidth)
         .classed("cellColor", true);
     enterSet.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
         .classed("cellText", true);
     // UPDATE
     d3.select("#kernelImg")
         .selectAll(".cellColor")
         .data(tensorToFlat(kernel))
         .attr("x", function(_, i) {
-            return x_scale(i % config.kernelWidth)
+            return x_scale(i % config.kernelWidth);
         })
         .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / config.kernelWidth))
+            return y_scale(Math.floor(i / config.kernelWidth));
         });
     d3.select("#kernelImg")
         .selectAll(".cellText")
         .data(tensorToFlat(kernel))
         .attr("x", function(_, i) {
-            return x_scale(i % config.kernelWidth) + Math.floor(config.cellWidth / 2)
+            return x_scale(i % config.kernelWidth) + config.cellWidth / 2;
         })
         .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / config.kernelWidth)) + Math.floor(config.cellHeight / 2)
+            return y_scale(Math.floor(i / config.kernelWidth)) + config.cellHeight / 2;
         })
         .text(d => d);
 }

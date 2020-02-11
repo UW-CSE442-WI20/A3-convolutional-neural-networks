@@ -19,7 +19,7 @@ export const spaceBetween = 40;
 export const cellWidth = 25;//w / inputWidth;
 export const cellHeight = 25;//h / inputHeight;
 
-export const fontSize = Math.min(cellHeight, cellWidth) * 0.5;
+export const fontSize = Math.min(cellHeight, cellWidth) * 0.9;
 
 // Input image size
 export const inputWidth = 28;
