@@ -52,6 +52,7 @@ function loadImage(url) {
  * Begin iterating through the result image, displaying the traversed pixels.
  */
 function animateConv() {
+    d3.select("#auto-conv").on("click", () => {});
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
 
     drawInputData(image, true);
@@ -69,6 +70,7 @@ function animateConv() {
         } else {
             drawInputData(image, false);
             drawOutputData(visibleImg, false);
+            d3.select("#auto-conv").on("click", animateConv);
         }
     }
 
