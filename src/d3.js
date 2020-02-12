@@ -23,12 +23,15 @@ function loadImage(url) {
 
     const pixelValues = [];
 
-    for (let i = 0; i < canvas.height; i++) {
-        pixelValues[i] = [];
-    }
-
     const base_image = new Image();
     base_image.onload = () => {
+        canvas.width = base_image.width;
+        canvas.height = base_image.height;
+        
+        for (let i = 0; i < canvas.height; i++) {
+            pixelValues[i] = [];
+        }
+
         context.drawImage(base_image, 0, 0);
 
         const imgData = context.getImageData(0, 0, canvas.width, canvas.height);

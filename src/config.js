@@ -18,8 +18,8 @@ export const spaceBetween = img_width / 2;
 export const fontSize = Math.min(cellHeight, cellWidth) * 0.9;
 
 // Input image size
-export const inputWidth = 28;
-export const inputHeight = 28;
+export const inputWidth = 32;
+export const inputHeight = 32;
 
 // Width/Height of an individual cell
 export const cellWidth = img_width / inputWidth;
