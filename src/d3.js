@@ -23,12 +23,15 @@ function loadImage(url) {
 
     const pixelValues = [];
 
-    for (let i = 0; i < canvas.height; i++) {
-        pixelValues[i] = [];
-    }
-
     const base_image = new Image();
-    base_image.onload = function(){
+    base_image.onload = () => {
+        canvas.width = base_image.width;
+        canvas.height = base_image.height;
+        
+        for (let i = 0; i < canvas.height; i++) {
+            pixelValues[i] = [];
+        }
+
         context.drawImage(base_image, 0, 0);
 
         const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -97,6 +100,21 @@ function updateData() {
             kernel = [[ 1,  2,  1],
                       [ 0,  0,  0], 
                       [-1, -2, -1]];
+            break;
+        case "edge_detection":
+            kernel = [[0,  1, 0],
+                      [1, -4, 1],
+                      [0,  1, 0]];
+            break;
+        case "sharpen":
+            kernel = [[ 0, -1,  0],
+                      [-1,  5, -1],
+                      [ 0, -1,  0]];
+            break;
+        case "gaussian_blur":
+            kernel = [[1/16, 2/16, 1/16],
+                      [2/16, 4/16, 2/16],
+                      [1/16, 2/16, 1/16]];
             break;
     }
 

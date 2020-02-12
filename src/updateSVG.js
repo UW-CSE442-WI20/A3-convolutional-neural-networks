@@ -32,7 +32,7 @@ export function floatToGray(f) {
  * @param {RGBColor} rgb A d3 rgb representing a shade of gray
  */
 export function grayToFloat(rgb) {
-    return ((rgb.r + rgb.g + rgb.b) / 3.0) / 255.0;
+    return ((rgb.r * 0.3) + (rgb.g * 0.59) + (rgb.b * 0.11)) / 255.0;
 }
 
 /**
@@ -192,7 +192,7 @@ export function drawKernelData(kernel) {
         .attr("y", function(_, i) {
             return y_scale(Math.floor(i / config.kernelWidth)) + config.cellHeight / 2;
         })
-        .text(d => d);
+        .text(d => (Math.round(d * 10) / 10));
 }
 
 /**

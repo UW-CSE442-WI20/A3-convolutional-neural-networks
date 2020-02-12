@@ -15,8 +15,8 @@ export const highlightOutlineWidth = borderWidth * 1;
 export const highlightOutlineColor = "red";
 
 // Input image size
-export const inputWidth = 28;
-export const inputHeight = 28;
+export const inputWidth = 32;
+export const inputHeight = 32;
 
 // Kernel size
 export const kernelWidth = 3;
