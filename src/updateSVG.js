@@ -40,18 +40,28 @@ export function grayToFloat(rgb) {
  */
 export function drawInputData(image, disableMouseover) {
     const updateSet = d3.select("#inputImg")
-        .selectAll(".cellColor")
+        .selectAll(".cellWrapper")
         .data(tensorToFlat(image));
     // ENTER
     const enterSet = updateSet.enter()
-        .append("rect")
+        .append("g")
+        .classed("cellWrapper", true);
+    enterSet.append("rect")
         .attr("width", config.cellWidth)
         .attr("height", config.cellHeight)
         .attr("stroke", config.borderColor)
         .attr("stroke-width", config.borderWidth)
         .classed("cellColor", true);
+    enterSet.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .attr("pointer-events", "none")
+        .classed("cellText", true);
     // UPDATE
-    updateSet.merge(enterSet)
+    d3.select("#inputImg")
+        .selectAll(".cellColor")
         .attr("x", function(_, i) {
             return x_scale(i % config.inputHeight)
         })
@@ -69,6 +79,16 @@ export function drawInputData(image, disableMouseover) {
                 removeEffects();
             }
         });
+    d3.select("#inputImg")
+        .selectAll(".cellText")
+        .data(tensorToFlat(image))
+        .attr("x", function(_, i) {
+            return x_scale(i % config.inputWidth) + config.cellWidth / 2;
+        })
+        .attr("y", function(_, i) {
+            return y_scale(Math.floor(i / config.inputWidth)) + config.cellHeight / 2;
+        })
+        .text(d => "");
 }
 
 /**
@@ -76,18 +96,29 @@ export function drawInputData(image, disableMouseover) {
  */
 export function drawOutputData(resultImg, disableMouseover) {
     const updateSet = d3.select("#outputImg")
-        .selectAll(".cellColor")
+        .selectAll(".cellWrapper")
         .data(tensorToFlat(resultImg));
     // ENTER
     const enterSet = updateSet.enter()
-        .append("rect")
+        .append("g")
+        .classed("cellWrapper", true);
+    enterSet.append("rect")
         .attr("width", config.cellWidth)
         .attr("height", config.cellHeight)
         .attr("stroke", config.borderColor)
         .attr("stroke-width", config.borderWidth)
         .classed("cellColor", true);
+    enterSet.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .attr("pointer-events", "none")
+        .classed("cellText", true);
     // UPDATE
-    updateSet.merge(enterSet)
+    d3.select("#outputImg")
+        .selectAll(".cellColor")
+        .data(tensorToFlat(resultImg))
         .attr("x", function(_, i) {
             return x_scale(i % config.outputHeight)
         })
@@ -105,6 +136,16 @@ export function drawOutputData(resultImg, disableMouseover) {
                 removeEffects();
             }
         });
+    d3.select("#outputImg")
+        .selectAll(".cellText")
+        .data(tensorToFlat(resultImg))
+        .attr("x", function(_, i) {
+            return x_scale(i % config.outputWidth) + config.cellWidth / 2;
+        })
+        .attr("y", function(_, i) {
+            return y_scale(Math.floor(i / config.outputWidth)) + config.cellHeight / 2;
+        })
+        .text(d => "");
 }
 
 /**
@@ -130,6 +171,7 @@ export function drawKernelData(kernel) {
         .attr("dominant-baseline", "central")
         .attr("font-family", "sans-serif")
         .attr("font-size", config.fontSize)
+        .attr("pointer-events", "none")
         .classed("cellText", true);
     // UPDATE
     d3.select("#kernelImg")

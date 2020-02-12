@@ -14,8 +14,6 @@ export const borderColor = "gray";
 export const highlightOutlineWidth = borderWidth * 1;
 export const highlightOutlineColor = "red";
 
-export const fontSize = Math.min(cellHeight, cellWidth) * 0.9;
-
 // Input image size
 export const inputWidth = 28;
 export const inputHeight = 28;
@@ -43,6 +41,8 @@ export const outputHeight = PADDED ?
 // Width/Height of an individual cell
 export const cellWidth = img_width / (inputWidth + 2);
 export const cellHeight = img_height / (inputHeight + 2);
+
+export const fontSize = Math.min(cellHeight, cellWidth) * 0.9;
 
 // Padding between images
 export const spaceBetween = img_width / 2;
