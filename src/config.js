@@ -1,7 +1,9 @@
+export const svgWidth = window.innerWidth * 0.95;
+
 // Width and height of the input and output images, in pixels. The cell
 // width and height are automatically calculated to fit this size.
-export const img_width = 640
-export const img_height = 640
+export const img_width = svgWidth * 2 / 5;
+export const img_height = img_width;
 
 // Should the input matrix be padded
 export const PADDED = true;
@@ -12,18 +14,11 @@ export const borderColor = "gray";
 export const highlightOutlineWidth = borderWidth * 1;
 export const highlightOutlineColor = "red";
 
-// Padding between images
-export const spaceBetween = img_width / 2;
-
 export const fontSize = Math.min(cellHeight, cellWidth) * 0.9;
 
 // Input image size
 export const inputWidth = 28;
 export const inputHeight = 28;
-
-// Width/Height of an individual cell
-export const cellWidth = img_width / inputWidth;
-export const cellHeight = img_height / inputHeight;
 
 // Kernel size
 export const kernelWidth = 3;
@@ -44,5 +39,12 @@ export const outputWidth = PADDED ?
 export const outputHeight = PADDED ?
     inputHeight :
     inputHeight - 2 * inputHeightLoss;
+
+// Width/Height of an individual cell
+export const cellWidth = img_width / (inputWidth + 2);
+export const cellHeight = img_height / (inputHeight + 2);
+
+// Padding between images
+export const spaceBetween = img_width / 2;
 
 export const timePerLine = 500;

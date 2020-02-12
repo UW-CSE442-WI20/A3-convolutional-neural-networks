@@ -21,21 +21,8 @@ export function initInputImg() {
     const inputImg = d3.select("#rootDisplay")
         .append("g")
         .attr("id", "inputImg")
-        .attr("clip-path", "url(#inputImgMask)")
-        .attr("transform", `translate(${config.borderWidth / 2},
-                                      ${config.borderWidth / 2})`);
-    // Box around image(used for mask and outline)
-    const inputOutline = inputImg.append("rect")
-        .attr("id", "inputOutline")
-        .attr("x", -config.borderWidth / 2)
-        .attr("y", -config.borderWidth / 2)
-        .attr("width", config.cellWidth * config.inputWidth + config.borderWidth)
-        .attr("height", config.cellHeight * config.inputHeight + config.borderWidth)
-        .attr("fill-opacity", 0);
-    // Mask (uses outline of image)
-    const inputMask = inputImg.append("defs")
-        .append("clipPath").attr("id", "inputImgMask")
-        .append("use").attr("xlink:href", "#inputOutline");
+        .attr("transform", `translate(${config.cellWidth + config.borderWidth / 2},
+                                      ${config.cellHeight + config.borderWidth / 2})`);
 }
 
 /**
@@ -46,21 +33,8 @@ export function initOutputImg() {
     const outputImg = d3.select("#rootDisplay")
         .append("g")
         .attr("id", "outputImg")
-        .attr("clip-path", "url(#outputImgMask)")
-        .attr("transform", `translate(${config.img_width + config.spaceBetween + config.borderWidth / 2},
-                                      ${config.inputHeightLoss * config.cellHeight + config.borderWidth / 2})`);
-    // Box around image(used for mask and outline)
-    const outputOutline = outputImg.append("rect")
-        .attr("id", "outputOutline")
-        .attr("x", -config.borderWidth / 2)
-        .attr("y", -config.borderWidth / 2)
-        .attr("width", config.cellWidth * config.outputWidth + config.borderWidth)
-        .attr("height", config.cellHeight * config.outputHeight + config.borderWidth)
-        .attr("fill-opacity", 0);
-    // Mask (uses outline of image)
-    const outputMask = outputImg.append("defs")
-        .append("clipPath").attr("id", "outputImgMask")
-        .append("use").attr("xlink:href", "#outputOutline");
+        .attr("transform", `translate(${config.img_width + config.spaceBetween + config.cellWidth + config.borderWidth / 2},
+                                      ${config.inputHeightLoss * config.cellHeight + config.cellHeight + config.borderWidth / 2})`);
 }
 
 /**
@@ -71,21 +45,8 @@ export function initKernelImg() {
     const kernelImg = d3.select("#rootDisplay")
         .append("g")
         .attr("id", "kernelImg")
-        .attr("clip-path", "url(#kernelImgMask)")
         .attr("transform", `translate(${config.img_width + config.spaceBetween / 2 - config.cellWidth * (config.kernelWidth) / 2 +  config.borderWidth / 2},
-                                      ${config.img_height - config.cellHeight * config.kernelHeight + config.borderWidth / 2})`);
-    // Box around image(used for mask and outline)
-    const kernelOutline = kernelImg.append("rect")
-        .attr("id", "kernelOutline")
-        .attr("x", -config.borderWidth / 2)
-        .attr("y", -config.borderWidth / 2)
-        .attr("width", config.cellWidth * config.kernelWidth + config.borderWidth)
-        .attr("height", config.cellHeight * config.kernelHeight + config.borderWidth)
-        .attr("fill-opacity", 0);
-    // Mask (uses outline of image)
-    const kernelMask = kernelImg.append("defs")
-        .append("clipPath").attr("id", "kernelImgMask")
-        .append("use").attr("xlink:href", "#kernelOutline");
+                                      ${config.img_height - config.cellHeight * (config.kernelHeight + 1) + config.borderWidth / 2})`);
 }
 
 /**
@@ -95,17 +56,37 @@ export function initEffects() {
     const effects = d3.select("#rootDisplay")
         .append("g")
         .attr("visibility", "hidden");
-    const inputHighlight = effects.append("rect")
+    
+    const inputHighlight = effects.append("g")
         .attr("id", "inputHighlight")
-        .attr("pointer-events", "none")
+        .attr("pointer-events", "none");
+    inputHighlight.selectAll(".highlightCell")
+        .data([...Array(config.kernelHeight * config.kernelWidth)])
+        .enter()
+        .append("rect")
+        .attr("x", function(_, i) {
+            return (i % config.kernelWidth) * config.cellWidth;
+        })
+        .attr("y", function(_, i) {
+            return (Math.floor(i / config.kernelWidth) * config.cellHeight);
+        })
+        .attr("width", config.cellWidth)
+        .attr("height", config.cellHeight)
+        .attr("fill-opacity", 0)
+        .attr("stroke", config.borderColor)
+        .attr("stroke-width", config.borderWidth)
+        .classed("highlightCell, true");
+    inputHighlight.append("rect")
         .attr("width", config.cellWidth * config.kernelWidth)
         .attr("height", config.cellHeight * config.kernelHeight)
         .attr("fill-opacity", 0)
         .attr("stroke", config.highlightOutlineColor)
         .attr("stroke-width", config.highlightOutlineWidth);
-    const outputHighlight = effects.append("rect")
+    
+    const outputHighlight = effects.append("g")
         .attr("id", "outputHighlight")
-        .attr("pointer-events", "none")
+        .attr("pointer-events", "none");
+    outputHighlight.append("rect")
         .attr("width", config.cellWidth)
         .attr("height", config.cellHeight)
         .attr("fill-opacity", 0)

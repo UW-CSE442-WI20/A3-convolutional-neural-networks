@@ -162,17 +162,11 @@ export function drawEffects(selectionX, selectionY) {
     removeEffects();
 
     d3.select("#inputHighlight")
-        .attr("x", x_scale(selectionX - 1))
-        .attr("y", y_scale(selectionY - 1));
-    if (config.PADDED) {
-        d3.select("#outputHighlight")
-            .attr("x", x_scale(selectionX))
-            .attr("y", y_scale(selectionY));
-    } else {
-        d3.select("#outputHighlight")
-            .attr("x", x_scale(selectionX - 1))
-            .attr("y", y_scale(selectionY - 1));
-    }
+        .attr("transform", `translate(${x_scale(selectionX - 1)},
+                                      ${y_scale(selectionY - 1)})`);
+    d3.select("#outputHighlight")
+        .attr("transform", `translate(${x_scale(selectionX)},
+                                      ${y_scale(selectionY)})`);
 
     for (let i = 0; i < 4; ++i) {
         // Trick to do all of this in one loop. Generates -1 -1; -1, 1; 1, -1; 1, 1.
@@ -185,33 +179,33 @@ export function drawEffects(selectionX, selectionY) {
 
         // Connect input with kernel
         d3.select(`#connectingLine-${i}`)
-            .attr("x1", x_scale(selectionX) + x_offset)
-            .attr("y1", y_scale(selectionY) + y_offset)
+            .attr("x1", x_scale(selectionX + 1) + x_offset)
+            .attr("y1", y_scale(selectionY + 1) + y_offset)
             .attr("x2", config.img_width + config.spaceBetween / 2 - config.cellWidth / 2 + x_offset)
-            .attr("y2", config.img_height - config.cellHeight * (config.kernelHeight - 1) + y_offset);
+            .attr("y2", config.img_height - config.cellHeight * (config.kernelHeight) + y_offset);
 
         // Connect kernel with output
         d3.select(`#connectingLine-${i + 4}`)
             .attr("x1", config.img_width + config.spaceBetween / 2 - config.cellWidth / 2 + x_offset)
-            .attr("y1", config.img_height - config.cellHeight * (config.kernelHeight - 1) + y_offset)
-            .attr("x2", config.img_width + config.spaceBetween + x_scale(selectionX) + (sign_x + 1) / 2 * config.cellWidth)
-            .attr("y2", y_scale(selectionY) + + (sign_y + 1) / 2 * config.cellHeight);
+            .attr("y1", config.img_height - config.cellHeight * (config.kernelHeight) + y_offset)
+            .attr("x2", config.img_width + config.spaceBetween + x_scale(selectionX + 1) + (sign_x + 1) / 2 * config.cellWidth)
+            .attr("y2", y_scale(selectionY + 1) + + (sign_y + 1) / 2 * config.cellHeight);
     }
 
     d3.select("#inputImg")
         .append("use")
-        .attr("id", "inputHighlightDisplay")
+        .classed("effectDisplay", true)
         .attr("xlink:href", "#inputHighlight");
 
     d3.select("#outputImg")
         .append("use")
-        .attr("id", "outputHighlightDisplay")
+        .classed("effectDisplay", true)
         .attr("xlink:href", "#outputHighlight");
     
     for (let i=0; i < 8; ++i) {
         d3.select("#lineWrapper")
             .append("use")
-            .attr("class", "connectingLineDisplay")
+            .classed("effectDisplay", true)
             .attr("xlink:href", "#connectingLine-" + i);
     }
 
@@ -221,10 +215,6 @@ export function drawEffects(selectionX, selectionY) {
  * Remove the effects(lines, highlights) from the SVG.
  */
 export function removeEffects() {
-    d3.select("#inputHighlightDisplay")
-        .remove();
-    d3.select("#outputHighlightDisplay")
-        .remove();
-    d3.selectAll(".connectingLineDisplay")
+    d3.selectAll(".effectDisplay")
         .remove();
 }
