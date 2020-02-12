@@ -3,7 +3,7 @@ import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
 import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects} from "./initSVG";
-import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, updateSelection, grayToFloat} from "./updateSVG";
+import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat} from "./updateSVG";
 import {tensorToFlat, createConv} from "./tensor";
 
 // Image data
@@ -56,25 +56,25 @@ function animateConv() {
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
 
     drawInputData(image, true);
-    let i = 0
 
-    function incrementPixel() {
-        const row = i % config.outputWidth;
-        const col = Math.floor(i / config.outputWidth);
+    let pixel = 0;
+    const interval = d3.interval(() => {
+        const row = pixel % config.outputWidth;
+        const col = Math.floor(pixel / config.outputWidth);
         visibleImg[col][row] = resultImg[col][row];
+
         drawOutputData(visibleImg, true);
-        updateSelection(row, col);
-        ++i;
-        if (i < config.outputHeight * config.outputWidth) {
-            setTimeout(incrementPixel, 10);
-        } else {
+        drawEffects(row, col);
+        
+        if (pixel >= config.outputHeight * config.outputWidth - 1) {
+            interval.stop();
             drawInputData(image, false);
             drawOutputData(visibleImg, false);
             d3.select("#auto-conv").on("click", animateConv);
+        } else {
+            ++pixel;
         }
-    }
-
-    setTimeout(incrementPixel, 10);
+    }, config.timePerLine / config.outputWidth);
 }
 
 

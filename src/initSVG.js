@@ -114,9 +114,12 @@ export function initEffects() {
 
     // Need a total of 8 connecting lines, 4 for each corner of the input to kernel lines
     // and 4 for the kernel to output lines
+    const lines = d3.select("#rootDisplay")
+        .append("g")
+        .attr("id", "lineWrapper");
     for (let i = 0; i < 8; ++i) {
         const connectingLine = effects.append("line")
-            .attr("id", "connectingLine" + "-" + i)
+            .attr("id", `connectingLine-${i}`)
             .attr("pointer-events", "none")
             .attr("stroke-opacity", 0.8)
             .attr("stroke-dasharray", 4)

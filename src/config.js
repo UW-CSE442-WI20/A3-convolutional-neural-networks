@@ -44,3 +44,5 @@ export const outputWidth = PADDED ?
 export const outputHeight = PADDED ?
     inputHeight :
     inputHeight - 2 * inputHeightLoss;
+
+export const timePerLine = 500;
