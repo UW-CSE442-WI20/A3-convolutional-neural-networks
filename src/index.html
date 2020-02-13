@@ -40,12 +40,6 @@
         display: inline-table;
         background-color: white;
         margin-left: 2px;
-      } #main-div {
-        position: relative;
-      }
-      .align {
-        position: absolute;
-        transform: translate(-50%, 100%);
       }
     </style>
   </head>
@@ -67,33 +61,26 @@
       </div>
     </div>
     <canvas hidden id="input-image" width="32px" height="32px"></canvas>
-    <div id="main-div">
-      <select hidden class="align" id="image-selection">
-        <option selected value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/bird.png">Bird</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/car.png">Car</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/cat.png">Cat</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/deer.png">Deer</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/dog.png">Dog</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/frog.png">Frog</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/horse.png">Horse</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/plane.png">Plane</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/ship.png">Ship</option>
-        <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/truck.png">Truck</option>
-      </select>
-      <select hidden class="align" id="filter-selection">
-        <option selected value="identity" title="The identity kernel preserves the input image.">Identity</option>
-        <option value="x_sobel" title="The horizontal sobel kernel detects horizontal changes.">Horizontal Sobel</option>
-        <option value="y_sobel" title="The vertical sobel kernel detects vertical changes.">Vertical Sobel</option>
-        <option value="edge_detection" title="The edge detection kernel highlights edges.">Edge Detection</option>
-        <option value="sharpen" title="The sharpen kernel sharpens the image by amplifying the input pixel and subtracting surrounding pixels.">Sharpen</option>
-        <option value="box_blur" title="The box blur kernel blurs the image by averaging surrounding pixels.">Box Blur</option>
-      </select>
-  
-      <button hidden type="button" class="align" id="auto-conv" title="Automatically convolve the image pixel by pixel.">Auto Conv</button>
-      <button hidden type="button" class="align" id="conv-all" title="Instantaneously convolve the entire image.">Conv All</button>
-      <button hidden type="button" class="align" id="prev" title="Previous slide">Previous</button>
-      <button hidden type="button" class="align" id="next" title="Next slide">Next</button>
-    </div>
+    <select hidden id="image-selection">
+      <option selected value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/bird.png">Bird</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/car.png">Car</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/cat.png">Cat</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/deer.png">Deer</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/dog.png">Dog</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/frog.png">Frog</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/horse.png">Horse</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/plane.png">Plane</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/ship.png">Ship</option>
+      <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/truck.png">Truck</option>
+    </select>
+    <select hidden id="filter-selection">
+      <option selected value="identity" title="The identity kernel preserves the input image.">Identity</option>
+      <option value="x_sobel" title="The horizontal sobel kernel detects horizontal changes.">Horizontal Sobel</option>
+      <option value="y_sobel" title="The vertical sobel kernel detects vertical changes.">Vertical Sobel</option>
+      <option value="edge_detection" title="The edge detection kernel highlights edges.">Edge Detection</option>
+      <option value="sharpen" title="The sharpen kernel sharpens the image by amplifying the input pixel and subtracting surrounding pixels.">Sharpen</option>
+      <option value="box_blur" title="The box blur kernel blurs the image by averaging surrounding pixels.">Box Blur</option>
+    </select>
     <script src="./d3.js"></script>
   </body>
 </html>
