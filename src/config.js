@@ -12,7 +12,8 @@ export const PADDED = true;
 export const borderWidth = 1;
 export const borderColor = "gray";
 export const highlightOutlineWidth = 2;
-export const highlightOutlineColor = "red";
+export const highlightColorIn = "purple";
+export const highlightColorOut = "orange";
 
 // Input image size
 export const inputWidth = 32;
@@ -42,9 +43,14 @@ export const outputHeight = PADDED ?
 export const cellWidth = img_width / (inputWidth + 2);
 export const cellHeight = img_height / (inputHeight + 2);
 
-export const fontSize = Math.min(cellHeight, cellWidth) * 0.9;
+export const fontSize = cellHeight * 0.9;
 
 // Padding between images
 export const spaceBetween = img_width / 2;
 
-export const timePerLine = 500;
+export const kernelCellWidth = spaceBetween / 2 / kernelWidth;
+export const kernelCellHeight = spaceBetween / 2 / kernelHeight;
+
+export const kernelFontSize = kernelCellHeight * 0.6;
+
+export const timePerLine = 100;

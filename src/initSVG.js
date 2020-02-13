@@ -45,8 +45,8 @@ export function initKernelImg() {
     const kernelImg = d3.select("#rootDisplay")
         .append("g")
         .attr("id", "kernelImg")
-        .attr("transform", `translate(${config.img_width + config.spaceBetween / 2 - config.cellWidth * (config.kernelWidth) / 2 +  config.borderWidth / 2},
-                                      ${config.img_height - config.cellHeight * (config.kernelHeight + 1) + config.borderWidth / 2})`);
+        .attr("transform", `translate(${config.img_width + config.spaceBetween / 4 + config.borderWidth},
+                                      ${config.img_height - config.kernelCellHeight * config.kernelHeight - config.cellHeight + config.borderWidth / 2})`);
 }
 
 /**
@@ -80,7 +80,7 @@ export function initEffects() {
         .attr("width", config.cellWidth * config.kernelWidth)
         .attr("height", config.cellHeight * config.kernelHeight)
         .attr("fill-opacity", 0)
-        .attr("stroke", config.highlightOutlineColor)
+        .attr("stroke", config.highlightColorIn)
         .attr("stroke-width", config.highlightOutlineWidth);
     
     const outputHighlight = effects.append("g")
@@ -90,7 +90,7 @@ export function initEffects() {
         .attr("width", config.cellWidth)
         .attr("height", config.cellHeight)
         .attr("fill-opacity", 0)
-        .attr("stroke", config.highlightOutlineColor)
+        .attr("stroke", config.highlightColorOut)
         .attr("stroke-width", config.highlightOutlineWidth);
 
     // Need a total of 8 connecting lines, 4 for each corner of the input to kernel lines
@@ -104,7 +104,7 @@ export function initEffects() {
             .attr("pointer-events", "none")
             .attr("stroke-opacity", 0.8)
             .attr("stroke-dasharray", 4)
-            .attr("stroke", "red")
+            .attr("stroke", i < 4 ? config.highlightColorIn : config.highlightColorOut)
             .attr("stroke-width", config.borderWidth);
     }
 }

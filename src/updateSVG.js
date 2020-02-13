@@ -186,8 +186,8 @@ export function drawKernelData() {
         .append("g")
         .classed("cellWrapper", true);
     enterSet.append("rect")
-        .attr("width", config.cellWidth)
-        .attr("height", config.cellHeight)
+        .attr("width", config.kernelCellWidth)
+        .attr("height", config.kernelCellHeight)
         .attr("fill", "white")
         .attr("stroke", config.borderColor)
         .attr("stroke-width", config.borderWidth)
@@ -196,7 +196,7 @@ export function drawKernelData() {
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
         .attr("font-family", "sans-serif")
-        .attr("font-size", config.fontSize)
+        .attr("font-size", config.kernelFontSize)
         .attr("pointer-events", "none")
         .classed("cellText", true);
     // UPDATE
@@ -204,19 +204,19 @@ export function drawKernelData() {
         .selectAll(".cellColor")
         .data(flattenImg(kernel))
         .attr("x", function(_, i) {
-            return x_scale(i % config.kernelWidth);
+            return (i % config.kernelWidth) * config.kernelCellWidth;
         })
         .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / config.kernelWidth));
+            return (Math.floor(i / config.kernelWidth) * config.kernelCellHeight);
         });
     d3.select("#kernelImg")
         .selectAll(".cellText")
         .data(flattenImg(kernel))
         .attr("x", function(_, i) {
-            return x_scale(i % config.kernelWidth) + config.cellWidth / 2;
+            return (i % config.kernelWidth) * config.kernelCellWidth + config.kernelCellWidth / 2;
         })
         .attr("y", function(_, i) {
-            return y_scale(Math.floor(i / config.kernelWidth)) + config.cellHeight / 2;
+            return (Math.floor(i / config.kernelWidth)) * config.kernelCellHeight + config.kernelCellHeight / 2;
         })
         .text(d => (Math.round(d * 10) / 10));
 }
