@@ -6,7 +6,9 @@ import * as config from "./config";
  * Initialize the root SVG.
  */
 export function initSVG() {
-    d3.select("body")
+    d3.select("#main-div")
+        .style("width", config.svgWidth + "px")
+        .style("padding", (config.kernelCellWidth / 4) + "px")
         .append("svg")
         .attr("id", "rootDisplay")
         .attr("width", 2 * config.img_width + config.spaceBetween + config.borderWidth)
@@ -182,4 +184,41 @@ export function initAnnotations() {
 // TOOD: move to other file
 export function updateAnnotation(text) {
     d3.select("#annotation-text").text(text).call(wrap, text_area_w);
+}
+
+export function initControls() {
+    let padding = config.kernelCellWidth / 4
+
+    d3.select("#image-selection")
+        .style("transform", "translate(0%, -50%)")
+        .style("top", padding + "px")
+        .style("left", (config.cellWidth + padding) + "px")
+
+    d3.select("#filter-selection")
+        .style("transform", "translate(-50%, -50%)")
+        .style("top", (config.img_height - config.kernelCellHeight * config.kernelHeight - config.cellHeight * 3 + config.borderWidth / 2) + "px")
+        .style("left", (padding + config.img_width + config.spaceBetween / 2 + config.borderWidth) + "px")
+
+    d3.select("#next")
+        .style("transform", "translate(0%, -50%)")
+        .style("top", 0 + "px")
+        .style("left", (config.cellWidth * (config.inputWidth + 3) + config.spaceBetween) + "px")
+
+    d3.select("#next")
+        .style("transform", "translate(0%, -50%)")
+        .style("top", padding + "px")
+        .style("left", (padding + config.cellWidth * (config.inputWidth + 3) + config.spaceBetween) + "px")
+
+    d3.select("#prev")
+        .style("transform", "translate(-100%, -50%)")
+        .style("top", padding + "px")
+        .style("left", (padding + config.cellWidth * (config.inputWidth + 1)) + "px")
+
+    d3.select("#auto-conv")
+        .style("top", (-padding + config.cellHeight + config.borderWidth / 2) + "px")
+        .style("left", (padding + config.cellWidth * (config.inputWidth + 1) + config.spaceBetween * 1/4) + "px")
+
+    d3.select("#conv-all")
+        .style("top", (-padding + config.cellHeight + config.borderWidth / 2) + "px")
+        .style("left", (padding + config.cellWidth * (config.inputWidth + 1) + config.spaceBetween * 3/4) + "px")
 }
