@@ -9,9 +9,9 @@ export const img_height = img_width;
 export const PADDED = true;
 
 // Cell border
-export const borderWidth = 2;
+export const borderWidth = 1;
 export const borderColor = "gray";
-export const highlightOutlineWidth = borderWidth * 1;
+export const highlightOutlineWidth = 2;
 export const highlightOutlineColor = "red";
 
 // Input image size

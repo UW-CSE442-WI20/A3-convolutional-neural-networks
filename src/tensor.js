@@ -33,9 +33,13 @@ export function flattenImg(a) {
  */
 export function createConv(inShape, kernel, stride, dialation, padded) {
     let paddingMode = padded ? "same" : "valid";
+    
+    //const kernelTensor = tf.reshape(tf.tensor([kernel, kernel, kernel]), [kernel[0].length, kernel.length, 1, 3])
+    const kernelTensor = tf.reshape(tf.tensor(kernel), [kernel[0].length, kernel.length, 1, 1])
+
     return tf.layers.conv2d({
         inputShape: inShape,
-        kernelSize: kernel.shape.slice(0, 2),
+        kernelSize: [kernel[0].length, kernel.length],
         activation: "relu",
         filters: 1,
         strides: stride,
@@ -43,6 +47,6 @@ export function createConv(inShape, kernel, stride, dialation, padded) {
         trainable: false,
         useBias: false,
         padding: paddingMode,
-        weights: [kernel]
+        weights: [kernelTensor]
     });
 }

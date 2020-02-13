@@ -70,7 +70,7 @@ export function drawInputData(disableMouseover) {
         .attr("y", function(_, i) {
             return y_scale(Math.floor(i / config.inputHeight))
         })
-        .attr("fill", d => floatToGray(color_scale(d)))
+        .attr("fill", d => d3.rgb(d[0], d[1], d[2]))
         .on("mouseover", (_, i) => {
             if (!disableMouseover) {
                 const x = i % config.outputHeight + config.inputWidthLoss;
@@ -131,7 +131,7 @@ export function drawOutputData(disableMouseover) {
         .attr("y", function(_, i) {
             return y_scale(Math.floor(i / config.outputHeight))
         })
-        .attr("fill", d => floatToGray(color_scale(d)))
+        .attr("fill", d => d3.rgb(d[0], d[1], d[2]))
         .on("mouseover", (_, i) => {
             if (!disableMouseover) {
                 const x = i % config.outputHeight + config.inputWidthLoss;
@@ -171,7 +171,7 @@ export function drawOutputDataPoint(i) {
 
     cell.selectAll(".cellColor")
         .data([flattenImg(visibleImg)[i]])
-        .attr("fill", d => floatToGray(color_scale(d)));
+        .attr("fill", d => d3.rgb(d[0], d[1], d[2]))
 }
 
 /**
