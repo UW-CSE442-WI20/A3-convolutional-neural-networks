@@ -16,13 +16,21 @@ export let kernel = [[]];
 export let slide_idx = 0
 let slides = [
     new Slide("Bird", "demo", "Convolution simply takes two matrics of the same size, multiplies corresponding entries and sums them up. \n \n " +
-                              "Mouse over the left input matrix to convolve small patches with the kernel below! (Or use 'Auto Conv' to do it automatically) \n \n Click 'Next' once " + 
-                              "understand how the math works.", 0, 0),
+                              "Mouse over the left input matrix to convolve small patches with the kernel below! (Or use one of 'Auto Conv' and 'Conv All') \n \n Click 'Next' once " + 
+                              "you understand how the math works.", 0, 0),
     new Slide("Bird", "edge_detection", "Usually convolution is applied to images, where the numbers represent colors. \n \n " +
         "The kernel is applied to each color channel (r, g, b). \n \n " + 
         "The kernel below is an edge detection filter. Use it to highlight the edges of the bird. ", 0, 0),       
-    
-
+    new Slide("Dog", "sharpen", "Convolution is often used for image processing in photo editing tools. \n \n " +
+        "The kernel below sharpens the image. See the kernel values: it amplifies the middle pixel and subtracts the surrounding pixels. \n \n " + 
+        "Use it to sharpen the puppy!", 0, 0),
+    new Slide("Dog", "box_blur", "We can also blur images in a similar way. \n \n " +
+        "The box blur kernel below averages the surrounding pixels, thus blurring the image. \n \n " + 
+        "Use it to blur the puppy!", 0, 0),
+    new Slide("Plane", "x_sobel", "This kernel is called 'Horizontal Sobel'. It picks up color changes in the horizontal direction. \n \n " +
+        "Note the high response along the edges of the plane, since there the color transitions from plane to sky.", 0, 0),
+    new Slide("Plane", "y_sobel", "Similarly to the previous kernel, this one is called 'Vertical Sobel'. It picks up color changes in the vertical direction. \n \n " +
+        "Note the high response along the body of the plane, since there the color change from dark to light.", 0, 0),
     new Slide(null, null, "Now try convolving images on your own! Choose an image and filter from above.", 0, 0)]
 
 /**
@@ -122,6 +130,8 @@ function animateConv() {
 
     d3.select("#nextButtonWrapper").attr("visibility", "hidden");
 
+    d3.select("#conv-all").attr("disabled", "disabled")
+
     let default_val = slide_idx == 0 ? 0 : 255;
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => [default_val, default_val, default_val]));
 
@@ -153,10 +163,17 @@ function animateConv() {
             d3.select("#convButtonColor").attr("fill", "red").on("click", animateConv);
             d3.select("#convButtonText").text("Convolve");
             d3.select("#nextButtonWrapper").attr("visibility", "visible");
+
+            d3.select("#conv-all").attr("disabled", null)
         } else {
             ++pixel;
         }
     }, config.timePerLine / resultImg[0].length);
+}
+
+function conv_all() {
+    visibleImg = resultImg;
+    drawOutputData(false)
 }
 
 /**
@@ -164,11 +181,15 @@ function animateConv() {
  */
 function updateData() {
     let kernel_name = null;
+    let kernel_description = null;
     let img_url = null;
 
     if (slide_idx == slides.length - 1) {
         img_url = document.getElementsByClassName("selected")[0].getAttribute("src");
         kernel_name = document.getElementsByClassName("kselected")[0].dataset.name;
+        //img_url = d3.select("#image-selection").node().value;
+        //kernel_name = d3.select("#filter-selection").node().value;
+        kernel_description = d3.select("#filter-selection").node().selectedOptions[0].title
     }
     else {
         let options = Array.apply(null, d3.select("#image-selection").node().options)
@@ -182,6 +203,7 @@ function updateData() {
     } else {
         kernel = config.kernels[kernel_name];
     }
+    update_slide(kernel_description)
     loadImage(img_url);
 }
 
@@ -209,10 +231,16 @@ function refreshData() {
     drawKernelData();
 }
 
-function update_slide() {
+function update_slide(kernel_description=null) {
     d3.select("#annotation")
         .style("visibility", "visible");
-    updateAnnotation(slides[slide_idx].annotation)
+
+    let annotation = slides[slide_idx].annotation;
+    if (kernel_description != null) {
+        annotation += " \n \n \n \n \n \n \n \n \n" + kernel_description;
+    }
+
+    updateAnnotation(annotation)
 
     const prevColor = "red";
     const nextColor = "blue";
@@ -282,7 +310,6 @@ function prev_slide() {
     
     d3.select("#next").style("visibility", "visible");
 
-    update_slide()
     updateData();
 }
 
@@ -299,7 +326,6 @@ function next_slide() {
     
     d3.select("#prev").style("visibility", "visible");
 
-    update_slide()
     updateData();
 }
 
@@ -410,6 +436,7 @@ for(let thumbnail of document.getElementsByClassName("thumbnail")) {
 }
 
 d3.select("#auto-conv").on("click", animateConv);
+d3.select("#conv-all").on("click", conv_all);
 
 d3.select("#prev").style("visibility", "hidden");
 d3.select("#prev").on("click", prev_slide)
