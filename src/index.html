@@ -4,9 +4,9 @@
     <title>Convolutional Neural Networks</title>
     <style>
       :root {
-        --thumbSize: 50px;
-        --kernelThumbSize: 20px;
-        --kernelThumbFont: 10px;
+        --thumbSize: 0px;
+        --kernelThumbSize: 0px;
+        --kernelThumbFont: 0px;
       }
       .thumbnail {
         width: var(--thumbSize);
@@ -39,7 +39,7 @@
         border: 1px solid black;
         display: inline-table;
         background-color: white;
-        margin-left: 2px;
+        margin-right: 1em;
       } #main-div {
         position: relative;
       }
@@ -52,6 +52,10 @@
   <body>
     <div id="selectionWrapper" style="display: flex; padding: 0em; visibility: hidden;">
       <div id="thumbs" style="padding-right: 1em;">
+        <div>
+            <p style="font-size: var(--kernelThumbFont); margin-block-start: 0px; margin-block-end: 0px; visibility: hidden;">.</p>
+            <p style="font-size: var(--kernelThumbFont); margin-block-start: 0px; margin-block-end: 0px; visibility: hidden;">.</p>
+        </div>
         <img class="thumbnail selected" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/michan4-v2/Images/bird.png"/>
         <img class="thumbnail" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/car.png"/>
         <img class="thumbnail" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/cat.png"/>
