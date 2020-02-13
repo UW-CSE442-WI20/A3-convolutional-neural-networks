@@ -3,14 +3,14 @@ import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
 import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects} from "./initSVG";
-import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat} from "./updateSVG";
+import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat, drawOutputDataPoint} from "./updateSVG";
 import {tensorToFlat, createConv} from "./tensor";
 
 // Image data
-let image;
+export let image;
 export let resultImg;
 export let visibleImg;
-let kernel;
+export let kernel;
 
 /**
  * Given a url to an image, displays the image as a matrix of pixels.
@@ -61,19 +61,23 @@ function animateConv() {
     d3.select("#image-selection").attr("disabled", "disabled")
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
 
-    drawInputData(image, true);
+    drawInputData(true);
+    drawOutputData(true);
 
     let pixel = 0;
     const interval = d3.interval(() => {
         const row = pixel % config.outputWidth;
         const col = Math.floor(pixel / config.outputWidth);
  
-        drawEffects(row, col, true);
+        visibleImg[col][row] = resultImg[col][row];
+
+        drawEffects(row, col);
+        drawOutputDataPoint(pixel);
         
         if (stop_anim || pixel >= config.outputHeight * config.outputWidth - 1) {
             interval.stop();
-            drawInputData(image, false);
-            drawOutputData(visibleImg, false);
+            drawInputData(false);
+            drawOutputData(false);
             removeEffects()
             d3.select("#auto-conv").text("Auto Conv").on("click", animateConv);
             d3.select("#filter-selection").attr("disabled", null)
@@ -135,9 +139,9 @@ function refreshData() {
 
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
 
-    drawInputData(image, false);
-    drawOutputData(visibleImg, false);
-    drawKernelData(kernel);
+    drawInputData(false);
+    drawOutputData(false);
+    drawKernelData();
 }
 
 /**

@@ -12,12 +12,12 @@ export function randImgTensor(w, h, c) {
 }
 
 /**
- * Return the given tensor as a one-dimensional array.
+ * Returns the given image(an array) but with reduced dimensionality.
  * 
- * @param {tf.Tensor} t
+ * @param {tf.Tensor} a
  */
-export function tensorToFlat(t) {
-    return t.flat();
+export function flattenImg(a) {
+    return a.flat();
 }
 
 /**

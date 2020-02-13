@@ -1,8 +1,8 @@
 import * as d3 from "d3";
 
 import * as config from "./config";
-import {tensorToFlat} from "./tensor";
-import {resultImg, visibleImg} from "./d3"
+import {flattenImg} from "./tensor";
+import {image, resultImg, visibleImg, kernel} from "./d3"
 
 /*
 const x_scale = (i) => i * config.cellWidth;
@@ -39,10 +39,10 @@ export function grayToFloat(rgb) {
 /**
  * Draw the input data onto the image of the input.
  */
-export function drawInputData(image, disableMouseover) {
+export function drawInputData(disableMouseover) {
     const updateSet = d3.select("#inputImg")
         .selectAll(".cellWrapper")
-        .data(tensorToFlat(image));
+        .data(flattenImg(image));
     // ENTER
     const enterSet = updateSet.enter()
         .append("g")
@@ -63,7 +63,7 @@ export function drawInputData(image, disableMouseover) {
     // UPDATE
     d3.select("#inputImg")
         .selectAll(".cellColor")
-        .data(tensorToFlat(image))
+        .data(flattenImg(image))
         .attr("x", function(_, i) {
             return x_scale(i % config.inputHeight)
         })
@@ -73,7 +73,11 @@ export function drawInputData(image, disableMouseover) {
         .attr("fill", d => floatToGray(color_scale(d)))
         .on("mouseover", (_, i) => {
             if (!disableMouseover) {
-                drawEffects(i % config.inputHeight, Math.floor(i / config.inputHeight));
+                const x = i % config.outputHeight + config.inputWidthLoss;
+                const y = Math.floor(i / config.outputHeight) + config.inputHeightLoss;
+                visibleImg[y][x] = resultImg[y][x]
+                drawOutputDataPoint(i)
+                drawEffects(x, y);
             }
         })
         .on("mouseout", () => {
@@ -83,7 +87,7 @@ export function drawInputData(image, disableMouseover) {
         });
     d3.select("#inputImg")
         .selectAll(".cellText")
-        .data(tensorToFlat(image))
+        .data(flattenImg(image))
         .attr("x", function(_, i) {
             return x_scale(i % config.inputWidth) + config.cellWidth / 2;
         })
@@ -96,10 +100,10 @@ export function drawInputData(image, disableMouseover) {
 /**
  * Draw the output data onto the image of the output.
  */
-export function drawOutputData(resultImg, disableMouseover) {
+export function drawOutputData(disableMouseover) {
     const updateSet = d3.select("#outputImg")
         .selectAll(".cellWrapper")
-        .data(tensorToFlat(resultImg));
+        .data(flattenImg(visibleImg));
     // ENTER
     const enterSet = updateSet.enter()
         .append("g")
@@ -120,7 +124,7 @@ export function drawOutputData(resultImg, disableMouseover) {
     // UPDATE
     d3.select("#outputImg")
         .selectAll(".cellColor")
-        .data(tensorToFlat(resultImg))
+        .data(flattenImg(visibleImg))
         .attr("x", function(_, i) {
             return x_scale(i % config.outputHeight)
         })
@@ -130,7 +134,11 @@ export function drawOutputData(resultImg, disableMouseover) {
         .attr("fill", d => floatToGray(color_scale(d)))
         .on("mouseover", (_, i) => {
             if (!disableMouseover) {
-                drawEffects(i % config.outputHeight + config.inputWidthLoss, Math.floor(i / config.outputHeight) + config.inputHeightLoss);
+                const x = i % config.outputHeight + config.inputWidthLoss;
+                const y = Math.floor(i / config.outputHeight) + config.inputHeightLoss;
+                visibleImg[y][x] = resultImg[y][x];
+                drawOutputDataPoint(i)
+                drawEffects(x, y);
             }
         })
         .on("mouseout", () => {
@@ -140,7 +148,7 @@ export function drawOutputData(resultImg, disableMouseover) {
         });
     d3.select("#outputImg")
         .selectAll(".cellText")
-        .data(tensorToFlat(resultImg))
+        .data(flattenImg(visibleImg))
         .attr("x", function(_, i) {
             return x_scale(i % config.outputWidth) + config.cellWidth / 2;
         })
@@ -151,12 +159,28 @@ export function drawOutputData(resultImg, disableMouseover) {
 }
 
 /**
+ * Draw the output data onto the image of the output.
+ */
+export function drawOutputDataPoint(i) {
+    const cell = d3.select(
+        d3.select("#outputImg")
+            .selectAll(".cellWrapper")
+            .nodes()[i]
+        );
+    // UPDATE
+
+    cell.selectAll(".cellColor")
+        .data([flattenImg(visibleImg)[i]])
+        .attr("fill", d => floatToGray(color_scale(d)));
+}
+
+/**
  * Draw the kernel data onto the image of the kernel.
  */
-export function drawKernelData(kernel) {
+export function drawKernelData() {
     const updateSet = d3.select("#kernelImg")
         .selectAll(".cellWrapper")
-        .data(tensorToFlat(kernel));
+        .data(flattenImg(kernel));
     // ENTER
     const enterSet = updateSet.enter()
         .append("g")
@@ -178,7 +202,7 @@ export function drawKernelData(kernel) {
     // UPDATE
     d3.select("#kernelImg")
         .selectAll(".cellColor")
-        .data(tensorToFlat(kernel))
+        .data(flattenImg(kernel))
         .attr("x", function(_, i) {
             return x_scale(i % config.kernelWidth);
         })
@@ -187,7 +211,7 @@ export function drawKernelData(kernel) {
         });
     d3.select("#kernelImg")
         .selectAll(".cellText")
-        .data(tensorToFlat(kernel))
+        .data(flattenImg(kernel))
         .attr("x", function(_, i) {
             return x_scale(i % config.kernelWidth) + config.cellWidth / 2;
         })
@@ -202,7 +226,7 @@ export function drawKernelData(kernel) {
  * to the real effect is deleted and then recreated every time in case new shapes have
  * been added to the SVG.
  */
-export function drawEffects(selectionX, selectionY, disableMouseover=false) {
+export function drawEffects(selectionX, selectionY) {
     removeEffects();
 
     d3.select("#inputHighlight")
@@ -211,9 +235,6 @@ export function drawEffects(selectionX, selectionY, disableMouseover=false) {
     d3.select("#outputHighlight")
         .attr("transform", `translate(${x_scale(selectionX)},
                                       ${y_scale(selectionY)})`);
-
-    visibleImg[selectionY][selectionX] = resultImg[selectionY][selectionX]
-    drawOutputData(visibleImg, disableMouseover)
 
     for (let i = 0; i < 4; ++i) {
         // Trick to do all of this in one loop. Generates -1 -1; -1, 1; 1, -1; 1, 1.
