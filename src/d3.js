@@ -3,7 +3,7 @@ import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
 
-import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation, initControls} from "./initSVG";
+import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation} from "./initSVG";
 import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat, drawOutputDataPoint} from "./updateSVG";
 import {createConv} from "./tensor";
 import {Slide} from "./slide"
@@ -191,6 +191,7 @@ function updateData() {
     if (slide_idx == slides.length - 1) {
         img_url = document.getElementsByClassName("selected")[0].getAttribute("src");
         kernel_name = document.getElementsByClassName("kselected")[0].dataset.name;
+        // Get description
         kernel_description = d3.select("#filter-selection option[value=" + kernel_name + "]").node().title
     }
     else {
@@ -300,13 +301,6 @@ function prev_slide() {
 
     --slide_idx;
 
-    if (slide_idx == 0)
-        d3.select("#prev").style("visibility", "hidden");
-    else
-        d3.select("#prev").style("visibility", "visible");
-    
-    d3.select("#next").style("visibility", "visible");
-
     updateData();
 }
 
@@ -315,13 +309,6 @@ function next_slide() {
         return
 
     ++slide_idx;
-
-    if (slide_idx == slides.length - 1)
-        d3.select("#next").style("visibility", "hidden");
-    else
-        d3.select("#next").style("visibility", "visible");
-    
-    d3.select("#prev").style("visibility", "visible");
 
     updateData();
 }
@@ -443,7 +430,6 @@ function main() {
     initAnnotations();
 
     update_slide();
-    initControls();
     initKernelPreviews();
     updateData();
     
