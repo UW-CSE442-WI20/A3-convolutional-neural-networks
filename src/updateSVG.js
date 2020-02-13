@@ -2,6 +2,7 @@ import * as d3 from "d3";
 
 import * as config from "./config";
 import {tensorToFlat} from "./tensor";
+import {resultImg, visibleImg} from "./d3"
 
 /*
 const x_scale = (i) => i * config.cellWidth;
@@ -62,6 +63,7 @@ export function drawInputData(image, disableMouseover) {
     // UPDATE
     d3.select("#inputImg")
         .selectAll(".cellColor")
+        .data(tensorToFlat(image))
         .attr("x", function(_, i) {
             return x_scale(i % config.inputHeight)
         })
@@ -200,7 +202,7 @@ export function drawKernelData(kernel) {
  * to the real effect is deleted and then recreated every time in case new shapes have
  * been added to the SVG.
  */
-export function drawEffects(selectionX, selectionY) {
+export function drawEffects(selectionX, selectionY, disableMouseover=false) {
     removeEffects();
 
     d3.select("#inputHighlight")
@@ -209,6 +211,9 @@ export function drawEffects(selectionX, selectionY) {
     d3.select("#outputHighlight")
         .attr("transform", `translate(${x_scale(selectionX)},
                                       ${y_scale(selectionY)})`);
+
+    visibleImg[selectionY][selectionX] = resultImg[selectionY][selectionX]
+    drawOutputData(visibleImg, disableMouseover)
 
     for (let i = 0; i < 4; ++i) {
         // Trick to do all of this in one loop. Generates -1 -1; -1, 1; 1, -1; 1, 1.
@@ -250,7 +255,6 @@ export function drawEffects(selectionX, selectionY) {
             .classed("effectDisplay", true)
             .attr("xlink:href", "#connectingLine-" + i);
     }
-
 }
 
 /**
