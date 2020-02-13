@@ -6,7 +6,7 @@ import * as config from "./config";
  * Initialize the root SVG.
  */
 export function initSVG() {
-    d3.select("#main-div")
+    d3.select("body")
         .style("width", config.svgWidth + "px")
         .style("padding", (config.kernelCellWidth / 4) + "px")
         .append("svg")

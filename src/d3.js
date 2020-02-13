@@ -3,7 +3,7 @@ import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
 
-import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation, initControls} from "./initSVG";
+import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation} from "./initSVG";
 import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat, drawOutputDataPoint} from "./updateSVG";
 import {createConv} from "./tensor";
 import {Slide} from "./slide"
@@ -16,7 +16,7 @@ export let kernel = [[]];
 
 export let slide_idx = 0
 let slides = [
-    new Slide("Bird", "demo", "Convolution simply takes two matrics of the same size, multiplies corresponding entries and sums them up. \n \n " +
+    new Slide("Bird", "demo", "Convolution simply takes two matrics of the same size, gives weight to neighbors of a pixel, then sums the weights. \n \n " +
                               "Mouse over the left input matrix to convolve small patches with the kernel below! (Or use one of 'Auto Conv' and 'Conv All') \n \n Click 'Next' once " + 
                               "you understand how the math works.", 0, 0),
     new Slide("Bird", "edge_detection", "Usually convolution is applied to images, where the numbers represent colors. \n \n " +
@@ -65,8 +65,8 @@ function loadImage(url) {
             let color = [imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]];
 
             if (slide_idx == 0) { // Just do 0's and 1's for this one
-                let gray = (imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2]) / 3 / 255
-                color[0] = (gray <= 0.7) | 0
+                let gray = (0.3 * imgData.data[i] + 0.59 * imgData.data[i + 1] + 0.11 * imgData.data[i + 2]) / 255;
+                color[0] = (gray <= 0.7) | 0;
             }
             pixelValues[y][x] = color;
         }
@@ -80,23 +80,70 @@ function loadImage(url) {
     base_image.src = url;
 }
 
+function initKernelPreviews() {
+    const previewContainer = document.getElementById("kernels");
+    let first = true;
+    for(let kernelName of Object.keys(config.kernels)) {
+        let kernel = config.kernels[kernelName];
+        let kernelTable = getKernelTable(kernel, config.kernelPrettyNames[kernelName]);
+        previewContainer.appendChild(kernelTable);
+        kernelTable.dataset.name = kernelName;
+        kernelTable.addEventListener("click", () => {
+            let selected = document.getElementsByClassName("kselected");
+            selected[0].setAttribute("class", "kernel");
+            kernelTable.setAttribute("class", "kernel kselected");
+            updateData();    
+        });
+        if(first) {
+            kernelTable.setAttribute("class", "kselected kernel")
+            first = false;
+        }
+    }
+}
+
+function getKernelTable(kernel, name) {
+    const table = document.createElement("table");
+    table.setAttribute("class", "kernel");
+    table.setAttribute("border", "1");
+    const caption = document.createElement("caption");
+    caption.innerHTML = name
+    table.appendChild(caption);
+    for(let row of kernel) {
+        const tRow = document.createElement("tr");
+        for(let val of row) {
+            const tCell = document.createElement("td");
+            tCell.setAttribute("class", "kernelThumbCell");
+            tCell.innerHTML = Number( val.toFixed(1) );
+
+            tRow.appendChild(tCell);
+        }
+        table.appendChild(tRow);
+    }
+    return table;
+}
+
 /**
  * Begin iterating through the result image, displaying the traversed pixels.
  */
 function animateConv() {
     let stop_anim = false
-    d3.select("#auto-conv").text("Stop").on("click", () => { stop_anim = true; });
-    d3.select("#filter-selection").attr("disabled", "disabled")
-    d3.select("#image-selection").attr("disabled", "disabled")
-    d3.select("#conv-all").attr("disabled", "disabled")
-    d3.select("#next").attr("disabled", "disabled")
-    d3.select("#prev").attr("disabled", "disabled")
+
+    d3.select("#nextButtonWrapper").attr("visibility", "hidden");
+    d3.select("#convAllButtonWrapper").attr("visibility", "hidden");
+
+    d3.select("#selectionWrapper").node().style.visibility = "hidden";
 
     let default_val = slide_idx == 0 ? 0 : 255;
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => [default_val, default_val, default_val]));
 
     drawInputData(true);
     drawOutputData(true);
+
+
+    d3.select("#convButtonColor")
+        .on("click", () => { stop_anim = true; })
+        .attr("fill", config.stopColor);
+    d3.select("#convButtonText").text("Stop");
 
     let pixel = 0;
     const interval = d3.interval(() => {
@@ -113,12 +160,15 @@ function animateConv() {
             drawInputData(false);
             drawOutputData(false);
             removeEffects()
-            d3.select("#auto-conv").text("Auto Conv").on("click", animateConv);
-            d3.select("#conv-all").attr("disabled", null)
-            d3.select("#filter-selection").attr("disabled", null)
-            d3.select("#image-selection").attr("disabled", null)
-            d3.select("#next").attr("disabled", null)
-            d3.select("#prev").attr("disabled", null)
+
+            d3.select("#convButtonColor").attr("fill", config.convolveColor).on("click", animateConv);
+            d3.select("#convButtonText").text("Convolve");
+            d3.select("#nextButtonWrapper").attr("visibility", "visible");
+            d3.select("#convAllButtonWrapper").attr("visibility", "visible");
+
+            if (slide_idx == slides.length - 1) {
+                d3.select("#selectionWrapper").node().style.visibility = "visible";
+            }
         } else {
             ++pixel;
         }
@@ -139,9 +189,10 @@ function updateData() {
     let img_url = null;
 
     if (slide_idx == slides.length - 1) {
-        img_url = d3.select("#image-selection").node().value;
-        kernel_name = d3.select("#filter-selection").node().value;
-        kernel_description = d3.select("#filter-selection").node().selectedOptions[0].title
+        img_url = document.getElementsByClassName("selected")[0].getAttribute("src");
+        kernel_name = document.getElementsByClassName("kselected")[0].dataset.name;
+        // Get description
+        kernel_description = d3.select("#filter-selection option[value=" + kernel_name + "]").node().title
     }
     else {
         let options = Array.apply(null, d3.select("#image-selection").node().options)
@@ -150,45 +201,11 @@ function updateData() {
 
         kernel_name = slides[slide_idx].kernel
     }
-
-    switch (kernel_name) {
-        case "demo":
-            kernel = [[0, 2, 0],
-                      [2, 1, 2],
-                      [0, 2, 0]];
-            break
-        case "identity":
-            kernel = [[0, 0, 0],
-                      [0, 1, 0],
-                      [0, 0, 0]];
-            break;
-        case "x_sobel":
-            kernel = [[-1, 0, 1],
-                      [-2, 0, 2],
-                      [-1, 0, 1]];
-            break;
-        case "y_sobel":
-            kernel = [[ 1,  2,  1],
-                      [ 0,  0,  0], 
-                      [-1, -2, -1]];
-            break;
-        case "edge_detection":
-            kernel = [[-1,  -1, -1],
-                      [-1, 8, -1],
-                      [-1,  -1, -1]];
-            break;
-        case "sharpen":
-            kernel = [[ 0, -1,  0],
-                      [-1,  5, -1],
-                      [ 0, -1,  0]];
-            break;
-        case "box_blur":
-            kernel = [[1/9, 1/9, 1/9],
-                      [1/9, 1/9, 1/9],
-                      [1/9, 1/9, 1/9]];
-            break;
+    if (slide_idx == 0) {
+        kernel = [[0,1,0],[1,2,1],[0,1,0]];
+    } else {
+        kernel = config.kernels[kernel_name];
     }
-
     update_slide(kernel_description)
     loadImage(img_url);
 }
@@ -228,9 +245,54 @@ function update_slide(kernel_description=null) {
 
     updateAnnotation(annotation)
 
-    let vis = (slide_idx == slides.length - 1) ? "visible" : "hidden";
-    d3.select("#filter-selection").style("visibility", vis)
-    d3.select("#image-selection").style("visibility", vis)
+    if (slide_idx == 0) {
+        d3.select("#nextButtonColor")
+            .on("click", next_slide)
+            .attr("fill", config.nextColor);
+        d3.select("#nextButtonText")
+            .text("");
+        d3.select("#prevButtonColor")
+            .on("click", next_slide)
+            .attr("fill", config.nextColor);
+        d3.select("#prevButtonText")
+            .text("");
+        d3.select("#bigNextButtonText")
+            .text("Next");
+    } else if (slide_idx == slides.length - 1) {
+        d3.select("#nextButtonColor")
+            .on("click", prev_slide)
+            .attr("fill", config.prevColor);
+        d3.select("#nextButtonText")
+            .text("");
+        d3.select("#prevButtonColor")
+            .on("click", prev_slide)
+            .attr("fill", config.prevColor);
+        d3.select("#prevButtonText")
+            .text("");
+        d3.select("#bigNextButtonText")
+            .text("Prev");
+    } else {
+        d3.select("#nextButtonColor")
+            .on("click", next_slide)
+            .attr("fill", config.nextColor);
+        d3.select("#nextButtonText")
+            .text("Next");
+        d3.select("#prevButtonColor")
+            .on("click", prev_slide)
+            .attr("fill", config.prevColor);
+        d3.select("#prevButtonText")
+            .text("Prev");
+        d3.select("#bigNextButtonText")
+            .text("");
+    }
+        
+
+
+    if (slide_idx == slides.length - 1) {
+        d3.select("#selectionWrapper").node().style.visibility = "visible";
+    } else {
+        d3.select("#selectionWrapper").node().style.visibility = "hidden";
+    }
 }
 
 function prev_slide() {
@@ -238,13 +300,6 @@ function prev_slide() {
         return
 
     --slide_idx;
-
-    if (slide_idx == 0)
-        d3.select("#prev").style("visibility", "hidden");
-    else
-        d3.select("#prev").style("visibility", "visible");
-    
-    d3.select("#next").style("visibility", "visible");
 
     updateData();
 }
@@ -255,15 +310,113 @@ function next_slide() {
 
     ++slide_idx;
 
-    if (slide_idx == slides.length - 1)
-        d3.select("#next").style("visibility", "hidden");
-    else
-        d3.select("#next").style("visibility", "visible");
-    
-    d3.select("#prev").style("visibility", "visible");
-
     updateData();
 }
+
+export function initButtons() {
+    const convAllButton = d3.select("#rootDisplay")
+    .append("g")
+    .attr("id", "convAllButtonWrapper")
+    .attr("transform", `translate(${config.img_width + config.spaceBetween / 4},
+                                  ${config.cellHeight})`);
+
+    convAllButton.append("rect")
+        .attr("id", "convAllButtonColor")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", config.spaceBetween / 2)
+        .attr("height", config.spaceBetween / 8)
+        .on("click", conv_all)
+        .attr("fill", config.convolveColor);
+    convAllButton.append("text")
+        .attr("id", "convAllButtonText")
+        .attr("x", config.spaceBetween / 4)
+        .attr("y", config.spaceBetween / 16)
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .text("Convolve All");
+
+    const convButton = d3.select("#rootDisplay")
+    .append("g")
+    .attr("transform", `translate(${config.img_width + config.spaceBetween / 4},
+                                  ${config.cellHeight * 2 + config.spaceBetween / 8})`);
+
+    convButton.append("rect")
+        .attr("id", "convButtonColor")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", config.spaceBetween / 2)
+        .attr("height", config.spaceBetween / 8)
+        .on("click", animateConv)
+        .attr("fill", config.convolveColor);
+    convButton.append("text")
+        .attr("id", "convButtonText")
+        .attr("x", config.spaceBetween / 4)
+        .attr("y", config.spaceBetween / 16)
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .text("Convolve");
+
+    const nextButton = d3.select("#rootDisplay")
+    .append("g")
+    .attr("id", "nextButtonWrapper")
+    .attr("transform", `translate(${config.img_width + config.spaceBetween / 4},
+                                  ${config.cellHeight * 3 + config.spaceBetween / 4})`);
+
+    nextButton.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("id", "prevButtonColor")
+        .attr("width", config.spaceBetween / 2)
+        .attr("height", config.spaceBetween / 8)
+        .on("click", next_slide)
+        .attr("fill", config.nextColor);
+    nextButton.append("rect")
+        .attr("id", "nextButtonColor")
+        .attr("x", config.spaceBetween / 4)
+        .attr("y", 0)
+        .attr("width", config.spaceBetween / 4)
+        .attr("height", config.spaceBetween / 8)
+        .on("click", next_slide)
+        .attr("fill", config.nextColor);
+    nextButton.append("text")
+        .attr("id", "prevButtonText")
+        .attr("x", config.spaceBetween / 8)
+        .attr("y", config.spaceBetween / 16)
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .text("");
+    nextButton.append("text")
+        .attr("id", "nextButtonText")
+        .attr("x", config.spaceBetween * 3 / 8)
+        .attr("y", config.spaceBetween / 16)
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .text("");
+    nextButton.append("text")
+        .attr("id", "bigNextButtonText")
+        .attr("x", config.spaceBetween / 4)
+        .attr("y", config.spaceBetween / 16)
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .text("Next");
+}
+
 
 /**
  * This function will run when the document has loaded.
@@ -275,20 +428,33 @@ function main() {
     initOutputImg();
     initEffects();
     initAnnotations();
-    initControls();
-    updateData();    
+
+    update_slide();
+    initKernelPreviews();
+    updateData();
+    
+    initButtons();
 }
 
-d3.select("#filter-selection").style("visibility", "hidden")
-d3.select("#image-selection").style("visibility", "hidden")
-d3.select("#filter-selection").on("change", updateData);
-d3.select("#image-selection").on("change", updateData);
+for(let thumbnail of document.getElementsByClassName("thumbnail")) {
+    thumbnail.addEventListener("click", (a, b) => {
+        let selected = document.getElementsByClassName("selected");
+        selected[0].setAttribute("class", "thumbnail");
+        thumbnail.setAttribute("class", "thumbnail selected");
+        updateData();    
+    })
+}
 
-d3.select("#auto-conv").on("click", animateConv);
-d3.select("#conv-all").on("click", conv_all);
+//d3.select("#auto-conv").on("click", animateConv);
+//d3.select("#conv-all").on("click", conv_all);
 
-d3.select("#prev").style("visibility", "hidden");
-d3.select("#prev").on("click", prev_slide)
-d3.select("#next").on("click", next_slide)
+//d3.select("#prev").style("visibility", "hidden");
+//d3.select("#prev").on("click", prev_slide)
+//d3.select("#next").on("click", next_slide)
+
+document.documentElement.style.setProperty('--thumbSize', `${config.cellWidth * 3}px`);
+document.documentElement.style.setProperty('--kernelThumbSize', `${config.cellWidth}px`);
+document.documentElement.style.setProperty('--kernelThumbFont', `${config.fontSize}px`);
+ 
 
 window.onload = main;
