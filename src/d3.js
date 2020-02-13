@@ -339,7 +339,7 @@ export function initButtons() {
         .attr("y", 0)
         .attr("width", config.spaceBetween / 2)
         .attr("height", config.spaceBetween / 8)
-        .on("click", animateConv)
+        .on("click", conv_all)
         .attr("fill", config.convolveColor);
     convAllButton.append("text")
         .attr("id", "convAllButtonText")
