@@ -1,0 +1,3 @@
+Identity Kernel:
+The identity kernel does not change the image. It simply
+returns the input pixel when convolved with a patch.
