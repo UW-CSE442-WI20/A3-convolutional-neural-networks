@@ -19,17 +19,18 @@
       <option value="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/truck.png">Truck</option>
     </select>
     <select id="filter-selection">
-      <option selected value="identity">Identity</option>
-      <option value="x_sobel">Horizontal Sobel</option>
-      <option value="y_sobel">Vertical Sobel</option>
-      <option value="edge_detection">Edge Detection</option>
-      <option value="sharpen">Sharpen</option>
-      <option value="gaussian_blur">Gaussian Blur</option>
+      <option selected value="identity" title="The identity kernel preserves the input image.">Identity</option>
+      <option value="x_sobel" title="The horizontal sobel kernel detects horizontal changes.">Horizontal Sobel</option>
+      <option value="y_sobel" title="The vertical sobel kernel detects vertical changes.">Vertical Sobel</option>
+      <option value="edge_detection" title="The edge detection kernel highlights edges.">Edge Detection</option>
+      <option value="sharpen" title="The sharpen kernel sharpens the image by amplifying the input pixel and subtracting surrounding pixels.">Sharpen</option>
+      <option value="box_blur" title="The box blur kernel blurs the image by averaging surrounding pixels.">Box Blur</option>
     </select>
 
-    <button type="button" id="auto-conv">Auto Conv</button>
-    <button type="button" id="prev">Previous</button>
-    <button type="button" id="next">Next</button>
+    <button type="button" id="auto-conv" title="Automatically convolve the image pixel by pixel.">Auto Conv</button>
+    <button type="button" id="conv-all" title="Instantaneously convolve the entire image.">Conv All</button>
+    <button type="button" id="prev" title="Previous slide">Previous</button>
+    <button type="button" id="next" title="Next slide">Next</button>
 
     <script src="./d3.js"></script>
   </body>
