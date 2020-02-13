@@ -8,8 +8,8 @@ import {tensorToFlat, createConv} from "./tensor";
 
 // Image data
 let image;
-let resultImg;
-let visibleImg;
+export let resultImg;
+export let visibleImg;
 let kernel;
 
 /**
@@ -55,7 +55,10 @@ function loadImage(url) {
  * Begin iterating through the result image, displaying the traversed pixels.
  */
 function animateConv() {
-    d3.select("#auto-conv").on("click", () => {});
+    let stop_anim = false
+    d3.select("#auto-conv").text("Stop").on("click", () => { stop_anim = true; });
+    d3.select("#filter-selection").attr("disabled", "disabled")
+    d3.select("#image-selection").attr("disabled", "disabled")
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
 
     drawInputData(image, true);
@@ -64,22 +67,22 @@ function animateConv() {
     const interval = d3.interval(() => {
         const row = pixel % config.outputWidth;
         const col = Math.floor(pixel / config.outputWidth);
-        visibleImg[col][row] = resultImg[col][row];
-
-        drawOutputData(visibleImg, true);
-        drawEffects(row, col);
+ 
+        drawEffects(row, col, true);
         
-        if (pixel >= config.outputHeight * config.outputWidth - 1) {
+        if (stop_anim || pixel >= config.outputHeight * config.outputWidth - 1) {
             interval.stop();
             drawInputData(image, false);
             drawOutputData(visibleImg, false);
-            d3.select("#auto-conv").on("click", animateConv);
+            removeEffects()
+            d3.select("#auto-conv").text("Auto Conv").on("click", animateConv);
+            d3.select("#filter-selection").attr("disabled", null)
+            d3.select("#image-selection").attr("disabled", null)
         } else {
             ++pixel;
         }
     }, config.timePerLine / config.outputWidth);
 }
-
 
 /**
  * Updates display and data with new filter and image choice.
@@ -118,9 +121,9 @@ function updateData() {
             break;
     }
 
-    const image = d3.select("#image-selection");
-    // This is where we get the url for the Image Bois
-    loadImage(image.node().value);
+    const img = d3.select("#image-selection");
+    // This is where we get the url for the Image
+    loadImage(img.node().value);
 }
 
 /**
@@ -133,7 +136,7 @@ function refreshData() {
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
 
     drawInputData(image, false);
-    drawOutputData(resultImg, false);
+    drawOutputData(visibleImg, false);
     drawKernelData(kernel);
 }
 
