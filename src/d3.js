@@ -3,7 +3,7 @@ import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
 
-import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation} from "./initSVG";
+import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation, initControls} from "./initSVG";
 import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat, drawOutputDataPoint} from "./updateSVG";
 import {createConv} from "./tensor";
 import {Slide} from "./slide"
@@ -223,7 +223,7 @@ function update_slide(kernel_description=null) {
 
     let annotation = slides[slide_idx].annotation;
     if (kernel_description != null) {
-        annotation += " \n \n \n \n \n \n \n \n \n" + kernel_description;
+        annotation += " \n \n \n \n \n \n " + kernel_description;
     }
 
     updateAnnotation(annotation)
@@ -275,6 +275,7 @@ function main() {
     initOutputImg();
     initEffects();
     initAnnotations();
+    initControls();
     updateData();    
 }
 
