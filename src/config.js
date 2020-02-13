@@ -1,3 +1,5 @@
+import * as d3 from "d3";
+
 export const svgWidth = window.innerWidth * 0.95;
 
 // Width and height of the input and output images, in pixels. The cell
@@ -13,7 +15,13 @@ export const borderWidth = 1;
 export const borderColor = "gray";
 export const highlightOutlineWidth = 2;
 export const highlightColorIn = "purple";
-export const highlightColorOut = "orange";
+export const highlightColorOut = "red";
+
+export const nextColor = d3.rgb(61, 195, 122);
+export const prevColor = d3.rgb(255, 178, 206);
+
+export const convolveColor = nextColor;
+export const stopColor = prevColor;
 
 // Input image size
 export const inputWidth = 32;
@@ -58,29 +66,29 @@ export const timePerLine = 10;
 // kernels
 export const kernels = {
     "identity":
-                    [[0, 0, 0],
-                  [0, 1, 0],
-                  [0, 0, 0]],
+        [[0, 0, 0],
+         [0, 1, 0],
+         [0, 0, 0]],
     "x_sobel":
         [[-1, 0, 1],
-                  [-2, 0, 2],
-                  [-1, 0, 1]],
+         [-2, 0, 2],
+         [-1, 0, 1]],
     "y_sobel":
         [[ 1,  2,  1],
-                  [ 0,  0,  0], 
-                  [-1, -2, -1]],
+         [ 0,  0,  0], 
+         [-1, -2, -1]],
     "edge_detection":
         [[0,  1, 0],
-                  [1, -4, 1],
-                  [0,  1, 0]],
+         [1, -4, 1],
+         [0,  1, 0]],
     "sharpen":
         [[ 0, -1,  0],
-                  [-1,  5, -1],
-                  [ 0, -1,  0]],
-    "gaussian_blur":
-        [[1/16, 2/16, 1/16],
-                  [2/16, 4/16, 2/16],
-                  [1/16, 2/16, 1/16]]
+         [-1,  5, -1],
+         [ 0, -1,  0]],
+    "box_blur":
+        [[1/9, 1/9, 1/9],
+         [1/9, 1/9, 1/9],
+         [1/9, 1/9, 1/9]]
 }
 
 export const kernelPrettyNames =  {
@@ -89,5 +97,5 @@ export const kernelPrettyNames =  {
    "y_sobel": "Vertical Sobel",
    "edge_detection": "Edge Detection",
    "sharpen": "Sharpen",
-   "gaussian_blur": "Gaussian Blur"
+   "box_blur": "Blur"
 }

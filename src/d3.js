@@ -15,7 +15,7 @@ export let kernel = [[]];
 
 export let slide_idx = 0
 let slides = [
-    new Slide("Bird", "demo", "Convolution simply takes two matrics of the same size, multiplies corresponding entries and sums them up. \n \n " +
+    new Slide("Bird", "demo", "Convolution simply takes two matrics of the same size, gives weight to neighbors of a pixel, then sums the weights. \n \n " +
                               "Mouse over the left input matrix to convolve small patches with the kernel below! (Or use one of 'Auto Conv' and 'Conv All') \n \n Click 'Next' once " + 
                               "you understand how the math works.", 0, 0),
     new Slide("Bird", "edge_detection", "Usually convolution is applied to images, where the numbers represent colors. \n \n " +
@@ -141,7 +141,7 @@ function animateConv() {
 
     d3.select("#convButtonColor")
         .on("click", () => { stop_anim = true; })
-        .attr("fill", "blue");
+        .attr("fill", config.stopColor);
     d3.select("#convButtonText").text("Stop");
 
     let pixel = 0;
@@ -160,7 +160,7 @@ function animateConv() {
             drawOutputData(false);
             removeEffects()
 
-            d3.select("#convButtonColor").attr("fill", "red").on("click", animateConv);
+            d3.select("#convButtonColor").attr("fill", config.convolveColor).on("click", animateConv);
             d3.select("#convButtonText").text("Convolve");
             d3.select("#nextButtonWrapper").attr("visibility", "visible");
 
@@ -242,18 +242,15 @@ function update_slide(kernel_description=null) {
 
     updateAnnotation(annotation)
 
-    const prevColor = "red";
-    const nextColor = "blue";
-
     if (slide_idx == 0) {
         d3.select("#nextButtonColor")
             .on("click", next_slide)
-            .attr("fill", nextColor);
+            .attr("fill", config.nextColor);
         d3.select("#nextButtonText")
             .text("");
         d3.select("#prevButtonColor")
             .on("click", next_slide)
-            .attr("fill", nextColor);
+            .attr("fill", config.nextColor);
         d3.select("#prevButtonText")
             .text("");
         d3.select("#bigNextButtonText")
@@ -261,12 +258,12 @@ function update_slide(kernel_description=null) {
     } else if (slide_idx == slides.length - 1) {
         d3.select("#nextButtonColor")
             .on("click", prev_slide)
-            .attr("fill", prevColor);
+            .attr("fill", config.prevColor);
         d3.select("#nextButtonText")
             .text("");
         d3.select("#prevButtonColor")
             .on("click", prev_slide)
-            .attr("fill", prevColor);
+            .attr("fill", config.prevColor);
         d3.select("#prevButtonText")
             .text("");
         d3.select("#bigNextButtonText")
@@ -274,12 +271,12 @@ function update_slide(kernel_description=null) {
     } else {
         d3.select("#nextButtonColor")
             .on("click", next_slide)
-            .attr("fill", nextColor);
+            .attr("fill", config.nextColor);
         d3.select("#nextButtonText")
             .text("Next");
         d3.select("#prevButtonColor")
             .on("click", prev_slide)
-            .attr("fill", prevColor);
+            .attr("fill", config.prevColor);
         d3.select("#prevButtonText")
             .text("Prev");
         d3.select("#bigNextButtonText")
@@ -342,7 +339,7 @@ export function initButtons() {
         .attr("width", config.spaceBetween / 2)
         .attr("height", config.spaceBetween / 6)
         .on("click", animateConv)
-        .attr("fill", "red");
+        .attr("fill", config.convolveColor);
     convButton.append("text")
         .attr("id", "convButtonText")
         .attr("x", config.spaceBetween / 4)
@@ -364,10 +361,10 @@ export function initButtons() {
         .attr("x", 0)
         .attr("y", 0)
         .attr("id", "prevButtonColor")
-        .attr("width", config.spaceBetween / 4)
+        .attr("width", config.spaceBetween / 2)
         .attr("height", config.spaceBetween / 6)
         .on("click", next_slide)
-        .attr("fill", "blue");
+        .attr("fill", config.nextColor);
     nextButton.append("rect")
         .attr("id", "nextButtonColor")
         .attr("x", config.spaceBetween / 4)
@@ -375,7 +372,7 @@ export function initButtons() {
         .attr("width", config.spaceBetween / 4)
         .attr("height", config.spaceBetween / 6)
         .on("click", next_slide)
-        .attr("fill", "blue");
+        .attr("fill", config.nextColor);
     nextButton.append("text")
         .attr("id", "prevButtonText")
         .attr("x", config.spaceBetween / 8)

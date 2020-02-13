@@ -4,7 +4,7 @@
     <title>Convolutional Neural Networks</title>
     <style>
       .thumbnail {
-        width: 50px;
+        width: 75px;
         border: 3px solid transparent;
         opacity: 0.5;
         cursor: pointer;
@@ -70,7 +70,7 @@
       <option value="y_sobel">Vertical Sobel</option>
       <option value="edge_detection">Edge Detection</option>
       <option value="sharpen">Sharpen</option>
-      <option value="gaussian_blur">Gaussian Blur</option>
+      <option value="box_blur">Gaussian Blur</option>
     </select>
 
     <select hidden id="filter-selection">
@@ -86,7 +86,9 @@
     <button hidden type="button" id="prev">Previous</button>
     <button hidden type="button" id="next">Next</button>
 
+    <div>
     <button type="button" id="conv-all" title="Instantaneously convolve the entire image.">Conv All</button>
+    </div>
 
     <script src="./d3.js"></script>
   </body>
