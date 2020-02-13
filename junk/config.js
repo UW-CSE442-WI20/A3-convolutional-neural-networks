@@ -57,37 +57,37 @@ export const timePerLine = 10;
 
 // kernels
 export const kernels = {
-    "identity":
-                    [[0, 0, 0],
-                  [0, 1, 0],
-                  [0, 0, 0]],
-    "x_sobel":
-        [[-1, 0, 1],
-                  [-2, 0, 2],
-                  [-1, 0, 1]],
-    "y_sobel":
-        [[ 1,  2,  1],
-                  [ 0,  0,  0], 
-                  [-1, -2, -1]],
-    "edge_detection":
-        [[0,  1, 0],
-                  [1, -4, 1],
-                  [0,  1, 0]],
-    "sharpen":
-        [[ 0, -1,  0],
-                  [-1,  5, -1],
-                  [ 0, -1,  0]],
-    "gaussian_blur":
-        [[1/16, 2/16, 1/16],
-                  [2/16, 4/16, 2/16],
-                  [1/16, 2/16, 1/16]]
+        "identity":
+                        [[0, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 0]],
+        "x_sobel":
+            [[-1, 0, 1],
+                      [-2, 0, 2],
+                      [-1, 0, 1]],
+        "y_sobel":
+            [[ 1,  2,  1],
+                      [ 0,  0,  0], 
+                      [-1, -2, -1]],
+        "edge_detection":
+            [[0,  1, 0],
+                      [1, -4, 1],
+                      [0,  1, 0]],
+        "sharpen":
+            [[ 0, -1,  0],
+                      [-1,  5, -1],
+                      [ 0, -1,  0]],
+        "gaussian_blur":
+            [[1/16, 2/16, 1/16],
+                      [2/16, 4/16, 2/16],
+                      [1/16, 2/16, 1/16]]
 }
 
 export const kernelPrettyNames =  {
-   "identity": "Identity",
-   "x_sobel": "Horizontal Sobel",
-   "y_sobel": "Vertical Sobel",
-   "edge_detection": "Edge Detection",
-   "sharpen": "Sharpen",
-   "gaussian_blur": "Gaussian Blur"
+       "identity": "Identity",
+       "x_sobel": "Horizontal Sobel",
+       "y_sobel": "Vertical Sobel",
+       "edge_detection": "Edge Detection",
+       "sharpen": "Sharpen",
+       "gaussian_blur": "Gaussian Blur"
 }

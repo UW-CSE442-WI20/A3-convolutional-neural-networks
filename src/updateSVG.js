@@ -40,7 +40,7 @@ export function grayToFloat(rgb) {
  * Draw the input data onto the image of the input.
  */
 export function drawInputData(disableMouseover) {
-    let text_only = slide_idx == 0
+    let text_only = slide_idx == 0;
 
     const updateSet = d3.select("#inputImg")
         .selectAll(".cellWrapper")
