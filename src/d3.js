@@ -88,6 +88,7 @@ function initKernelPreviews() {
         let kernelTable = getKernelTable(kernel, config.kernelPrettyNames[kernelName]);
         previewContainer.appendChild(kernelTable);
         kernelTable.dataset.name = kernelName;
+        kernelTable.setAttribute("title", d3.select("#filter-selection option[value=" + kernelName + "]").node().title)
         kernelTable.addEventListener("click", () => {
             let selected = document.getElementsByClassName("kselected");
             selected[0].setAttribute("class", "kernel");
