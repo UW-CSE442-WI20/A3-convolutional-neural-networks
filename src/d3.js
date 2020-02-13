@@ -3,14 +3,14 @@ import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
 import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects} from "./initSVG";
-import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat} from "./updateSVG";
-import {tensorToFlat, createConv} from "./tensor";
+import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat, drawOutputDataPoint} from "./updateSVG";
+import {createConv} from "./tensor";
 
 // Image data
-let image;
-export let resultImg;
-export let visibleImg;
-let kernel;
+export let image = [[]];
+export let resultImg = [[]];
+export let visibleImg = [[]];
+export let kernel = [[]];
 
 /**
  * Given a url to an image, displays the image as a matrix of pixels.
@@ -39,7 +39,7 @@ function loadImage(url) {
         for (let i = 0; i < imgData.data.length; i += 4) {
             let x = (i / 4) % canvas.width;
             let y = Math.floor((i / 4) / canvas.width);
-            pixelValues[y][x] = grayToFloat(d3.rgb(imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]));
+            pixelValues[y][x] = [imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]];
         }
 
         image = pixelValues;
@@ -59,21 +59,25 @@ function animateConv() {
     d3.select("#auto-conv").text("Stop").on("click", () => { stop_anim = true; });
     d3.select("#filter-selection").attr("disabled", "disabled")
     d3.select("#image-selection").attr("disabled", "disabled")
-    visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
+    visibleImg = [...Array(resultImg[0].length)].map(() => [...Array(resultImg.length)].map(() => 0));
 
-    drawInputData(image, true);
+    drawInputData(true);
+    drawOutputData(true);
 
     let pixel = 0;
     const interval = d3.interval(() => {
-        const row = pixel % config.outputWidth;
-        const col = Math.floor(pixel / config.outputWidth);
+        const row = pixel % resultImg[0].length;
+        const col = Math.floor(pixel / resultImg[0].length);
  
-        drawEffects(row, col, true);
+        visibleImg[col][row] = resultImg[col][row];
+
+        drawEffects(row, col);
+        drawOutputDataPoint(pixel);
         
-        if (stop_anim || pixel >= config.outputHeight * config.outputWidth - 1) {
+        if (stop_anim || pixel >= resultImg.length * resultImg[0].length - 1) {
             interval.stop();
-            drawInputData(image, false);
-            drawOutputData(visibleImg, false);
+            drawInputData(false);
+            drawOutputData(false);
             removeEffects()
             d3.select("#auto-conv").text("Auto Conv").on("click", animateConv);
             d3.select("#filter-selection").attr("disabled", null)
@@ -81,7 +85,7 @@ function animateConv() {
         } else {
             ++pixel;
         }
-    }, config.timePerLine / config.outputWidth);
+    }, config.timePerLine / resultImg[0].length);
 }
 
 /**
@@ -130,14 +134,22 @@ function updateData() {
  * Refreshes the data display.
  */
 function refreshData() {
-    const convLayer = createConv([config.inputWidth, config.inputHeight, 1], tf.reshape(tf.tensor(kernel), [config.kernelWidth, config.kernelHeight, 1, 1]), 1, 1, config.PADDED);
-    resultImg = tf.reshape(convLayer.apply(tf.reshape(tf.tensor(image), [1, config.inputWidth, config.inputHeight, 1])), [config.outputWidth, config.outputHeight]).arraySync();
+    const convLayer = createConv([image[0].length, image.length, 1], kernel, 1, 1, config.PADDED);
 
-    visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => 0));
+    const r = image.map(row => row.map(v => v[0]));
+    const g = image.map(row => row.map(v => v[1]));
+    const b = image.map(row => row.map(v => v[2]));
+    resultImg = tf.concat([
+        convLayer.apply(tf.reshape(tf.tensor(r), [1, image[0].length, image.length, 1])),
+        convLayer.apply(tf.reshape(tf.tensor(g), [1, image[0].length, image.length, 1])),
+        convLayer.apply(tf.reshape(tf.tensor(b), [1, image[0].length, image.length, 1]))
+        ], 3).arraySync()[0];
 
-    drawInputData(image, false);
-    drawOutputData(visibleImg, false);
-    drawKernelData(kernel);
+    visibleImg = [...Array(resultImg[0].length)].map(() => [...Array(resultImg.length)].map(() => 0));
+
+    drawInputData(false);
+    drawOutputData(false);
+    drawKernelData();
 }
 
 /**
