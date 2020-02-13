@@ -1,0 +1,1 @@
+{"version":3,"sources":["style.css"],"names":[],"mappings":"AAAA;AACA;AACA;AACA;AACA;AACA;AACA","file":"style.e308ff8e.css","sourceRoot":"..\\src","sourcesContent":["div.bar {\r\n    display: inline-block;\r\n    width: 20px;\r\n    height: 75px;   /* We'll override height later */\r\n    background-color: teal;\r\n    margin-right: 2px;\r\n}"]}
