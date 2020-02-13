@@ -17,7 +17,7 @@ export function randImgTensor(w, h, c) {
  * @param {tf.Tensor} a
  */
 export function flattenImg(a) {
-    return a.flat();
+    return a.reduce((acc, val) => acc.concat(val), []);
 }
 
 /**

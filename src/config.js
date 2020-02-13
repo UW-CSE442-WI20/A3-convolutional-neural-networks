@@ -13,7 +13,7 @@ export const borderWidth = 1;
 export const borderColor = "gray";
 export const highlightOutlineWidth = 2;
 export const highlightColorIn = "purple";
-export const highlightColorOut = "orange";
+export const highlightColorOut = "blue";
 
 // Input image size
 export const inputWidth = 32;

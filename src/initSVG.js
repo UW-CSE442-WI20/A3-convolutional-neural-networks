@@ -102,9 +102,84 @@ export function initEffects() {
         const connectingLine = effects.append("line")
             .attr("id", `connectingLine-${i}`)
             .attr("pointer-events", "none")
-            .attr("stroke-opacity", 0.8)
+            .attr("stroke-opacity", 1)
             .attr("stroke-dasharray", 4)
             .attr("stroke", i < 4 ? config.highlightColorIn : config.highlightColorOut)
             .attr("stroke-width", config.borderWidth);
     }
+}
+
+// https://stackoverflow.com/questions/24784302/wrapping-text-in-d3/24785497
+// Slightly modified to allow \n characters
+function wrap(text, width) {
+    text.each(function () {
+        var text = d3.select(this),
+            words = text.text().split(" ").reverse(),
+            word,
+            line = [],
+            lineNumber = 0,
+            lineHeight = 1, // ems
+            x = text.attr("x"),
+            y = text.attr("y"),
+            dy = 0, //parseFloat(text.attr("dy")),
+            tspan = text.text(null)
+                        .append("tspan")
+                        .attr("x", x)
+                        .attr("y", y)
+                        .attr("dy", dy + "em");
+        while (word = words.pop()) {
+            let is_lf = word == "\n";
+            line.push(word);
+            tspan.text(line.join(" "));
+            if (tspan.node().getComputedTextLength() > width || is_lf) {
+                line.pop();
+                tspan.text(line.join(" "));
+                line = is_lf ? [] : [word];
+                tspan = text.append("tspan")
+                            .attr("x", x)
+                            .attr("y", y)
+                            .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                            .text(word);
+            }
+        }
+    });
+}
+
+let text_area_w = config.spaceBetween * 9/10;
+let text_area_h = config.spaceBetween * 7/10;
+
+export function initAnnotations() {
+    const annotation = d3.select("#rootDisplay")
+        .append("g")
+        .attr("transform", `translate(${config.img_width + config.spaceBetween / 2 - text_area_w / 2 + config.borderWidth / 2},
+                                      ${config.img_height - config.cellHeight - text_area_h - config.kernelCellHeight * (config.kernelHeight + 1/2) + config.borderWidth / 2})`);
+    
+    const g = annotation.append("g")
+        .attr("id", "annotation")
+        .attr("pointer-events", "none")
+    const rect = g.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", text_area_w)
+        .attr("height", text_area_h)
+        .attr("fill-opacity", 0)
+        // .attr("stroke", config.highlightColorIn)
+        // .attr("stroke-width", config.highlightOutlineWidth);
+
+    g.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .attr("pointer-events", "none")
+        .attr("x", text_area_w / 2)
+        .attr("y", "1em")
+        .text("")
+        .call(wrap, text_area_w)
+        .attr("id", "annotation-text");
+}
+
+// TOOD: move to other file
+export function updateAnnotation(text) {
+    d3.select("#annotation-text").text(text).call(wrap, text_area_w);
 }

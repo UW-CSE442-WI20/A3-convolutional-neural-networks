@@ -2,7 +2,7 @@ import * as d3 from "d3";
 
 import * as config from "./config";
 import {flattenImg} from "./tensor";
-import {image, resultImg, visibleImg, kernel} from "./d3"
+import {image, resultImg, visibleImg, kernel, slide_idx} from "./d3"
 
 /*
 const x_scale = (i) => i * config.cellWidth;
@@ -40,6 +40,8 @@ export function grayToFloat(rgb) {
  * Draw the input data onto the image of the input.
  */
 export function drawInputData(disableMouseover) {
+    let text_only = slide_idx == 0
+
     const updateSet = d3.select("#inputImg")
         .selectAll(".cellWrapper")
         .data(flattenImg(image));
@@ -71,6 +73,7 @@ export function drawInputData(disableMouseover) {
             return y_scale(Math.floor(i / config.inputHeight))
         })
         .attr("fill", d => d3.rgb(d[0], d[1], d[2]))
+        .attr("fill-opacity", text_only ? 0 : 1)
         .on("mouseover", (_, i) => {
             if (!disableMouseover) {
                 const x = i % config.outputHeight + config.inputWidthLoss;
@@ -94,13 +97,15 @@ export function drawInputData(disableMouseover) {
         .attr("y", function(_, i) {
             return y_scale(Math.floor(i / config.inputWidth)) + config.cellHeight / 2;
         })
-        .text(d => "");
+        .text(d => (text_only && d[0] >= 0) ? d[0] : "");
 }
 
 /**
  * Draw the output data onto the image of the output.
  */
 export function drawOutputData(disableMouseover) {
+    let text_only = slide_idx == 0
+
     const updateSet = d3.select("#outputImg")
         .selectAll(".cellWrapper")
         .data(flattenImg(visibleImg));
@@ -132,6 +137,7 @@ export function drawOutputData(disableMouseover) {
             return y_scale(Math.floor(i / config.outputHeight))
         })
         .attr("fill", d => d3.rgb(d[0], d[1], d[2]))
+        .attr("fill-opacity", text_only ? 0 : 1)
         .on("mouseover", (_, i) => {
             if (!disableMouseover) {
                 const x = i % config.outputHeight + config.inputWidthLoss;
@@ -155,23 +161,32 @@ export function drawOutputData(disableMouseover) {
         .attr("y", function(_, i) {
             return y_scale(Math.floor(i / config.outputWidth)) + config.cellHeight / 2;
         })
-        .text(d => "");
+        .text(d => (text_only && d[0] >= 0) ? d[0] : "");
 }
 
 /**
  * Draw the output data onto the image of the output.
  */
 export function drawOutputDataPoint(i) {
+    let text_only = slide_idx == 0
+
     const cell = d3.select(
         d3.select("#outputImg")
             .selectAll(".cellWrapper")
             .nodes()[i]
         );
     // UPDATE
-
-    cell.selectAll(".cellColor")
+    
+    if (!text_only) {
+        cell.selectAll(".cellColor")
         .data([flattenImg(visibleImg)[i]])
         .attr("fill", d => d3.rgb(d[0], d[1], d[2]))
+    }
+    else {
+        cell.selectAll(".cellText")
+        .data([flattenImg(visibleImg)[i]])
+        .text(d => (text_only && d[0] >= 0) ? d[0] : "");
+    }
 }
 
 /**
@@ -221,6 +236,10 @@ export function drawKernelData() {
         .text(d => (Math.round(d * 10) / 10));
 }
 
+function calc_offset(sign, kernel_size, cell_size) {
+    return (1 + sign) * cell_size / 2 + sign * (kernel_size - 1) / 2 * cell_size
+}
+
 /**
  * Draw the effects(lines, highlights) onto the page. Because the effects need to be on top, a reference
  * to the real effect is deleted and then recreated every time in case new shapes have
@@ -242,20 +261,23 @@ export function drawEffects(selectionX, selectionY) {
         let sign_x = 2 * (i & 1) - 1
         let sign_y = 2 * ((i >> 1) & 1) - 1
 
-        let x_offset = (1 + sign_x) * config.cellWidth / 2 + sign_x * (config.kernelWidth - 1) / 2 * config.cellWidth
-        let y_offset = (1 + sign_y) * config.cellHeight / 2 + sign_y * (config.kernelWidth - 1) / 2 * config.cellWidth
+        let x_offset = calc_offset(sign_x, config.kernelWidth, config.cellWidth)
+        let y_offset = calc_offset(sign_y, config.kernelHeight, config.cellHeight)
+
+        let x_offset_kernel = calc_offset(sign_x, config.kernelWidth, config.kernelCellWidth)
+        let y_offset_kernel = calc_offset(sign_y, config.kernelHeight, config.kernelCellHeight)
 
         // Connect input with kernel
         d3.select(`#connectingLine-${i}`)
             .attr("x1", x_scale(selectionX + 1) + x_offset)
             .attr("y1", y_scale(selectionY + 1) + y_offset)
-            .attr("x2", config.img_width + config.spaceBetween / 2 - config.cellWidth / 2 + x_offset)
-            .attr("y2", config.img_height - config.cellHeight * (config.kernelHeight) + y_offset);
+            .attr("x2", config.img_width + config.spaceBetween / 2 - config.kernelCellWidth / 2 + x_offset_kernel)
+            .attr("y2", config.img_height - config.cellHeight - config.kernelCellHeight * (config.kernelHeight + 1) / 2 + y_offset_kernel);
 
         // Connect kernel with output
         d3.select(`#connectingLine-${i + 4}`)
-            .attr("x1", config.img_width + config.spaceBetween / 2 - config.cellWidth / 2 + x_offset)
-            .attr("y1", config.img_height - config.cellHeight * (config.kernelHeight) + y_offset)
+            .attr("x1", config.img_width + config.spaceBetween / 2 - config.kernelCellWidth / 2 + x_offset_kernel)
+            .attr("y1", config.img_height - config.cellHeight - config.kernelCellHeight * (config.kernelHeight + 1) / 2 + y_offset_kernel)
             .attr("x2", config.img_width + config.spaceBetween + x_scale(selectionX + 1) + (sign_x + 1) / 2 * config.cellWidth)
             .attr("y2", y_scale(selectionY + 1) + + (sign_y + 1) / 2 * config.cellHeight);
     }
