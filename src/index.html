@@ -3,11 +3,25 @@
     <meta charset="UTF-8">
     <title>Convolutional Neural Networks</title>
     <style>
+      :root {
+        --thumbSize: 50px;
+        --kernelThumbSize: 20px;
+        --kernelThumbFont: 10px;
+      }
       .thumbnail {
-        width: 75px;
+        width: var(--thumbSize);
         border: 3px solid transparent;
         opacity: 0.5;
         cursor: pointer;
+      }
+      caption {
+        font-size: var(--kernelThumbSize);
+      }
+      .kernelThumbCell {
+          width: var(--kernelThumbSize);
+          height: var(--kernelThumbSize);
+          font-size: var(--kernelThumbFont);
+          text-align: center;
       }
       .selected {
         border: 3px solid red;
@@ -20,13 +34,12 @@
       .kernel {
         cursor: pointer;
         opacity: 0.5;
-        text-align: center;
+        dominant-baseline: middle;
         border-collapse: collapse;
         border: 1px solid black;
         display: inline-table;
         background-color: white;
-        margin-right: 1em;
-        margin-bottom: 1em;
+        margin-left: 2px;
       } #main-div {
         position: relative;
       }
@@ -37,9 +50,8 @@
     </style>
   </head>
   <body>
-    <div style="display: flex; padding: 0em">
-      <div id="thumbs" hidden style="padding-right: 1em;">
-        <p>Select an image!</p>
+    <div id="selectionWrapper" style="display: flex; padding: 0em; visibility: hidden;">
+      <div id="thumbs" style="padding-right: 1em;">
         <img class="thumbnail selected" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/michan4-v2/Images/bird.png"/>
         <img class="thumbnail" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/car.png"/>
         <img class="thumbnail" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/cat.png"/>
@@ -51,10 +63,7 @@
         <img class="thumbnail" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/ship.png"/>
         <img class="thumbnail" src="https://raw.githubusercontent.com/UW-CSE442-WI20/A3-convolutional-neural-networks/master/Images/truck.png"/>
       </div>
-      <div>
-        <div id="kernels" hidden>
-          <p>Select a kernel!</p>
-        </div>
+      <div id="kernels">
       </div>
     </div>
     <canvas hidden id="input-image" width="32px" height="32px"></canvas>

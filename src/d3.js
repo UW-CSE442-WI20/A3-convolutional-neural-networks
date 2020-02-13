@@ -112,8 +112,7 @@ function getKernelTable(kernel, name) {
         const tRow = document.createElement("tr");
         for(let val of row) {
             const tCell = document.createElement("td");
-            tCell.setAttribute("width", "23px");
-            tCell.setAttribute("height", "23px");
+            tCell.setAttribute("class", "kernelThumbCell");
             tCell.innerHTML = Number( val.toFixed(1) );
 
             tRow.appendChild(tCell);
@@ -130,8 +129,9 @@ function animateConv() {
     let stop_anim = false
 
     d3.select("#nextButtonWrapper").attr("visibility", "hidden");
+    d3.select("#convAllButtonWrapper").attr("visibility", "hidden");
 
-    d3.select("#conv-all").attr("disabled", "disabled")
+    d3.select("#selectionWrapper").node().style.visibility = "hidden";
 
     let default_val = slide_idx == 0 ? 0 : 255;
     visibleImg = [...Array(config.outputWidth)].map(() => [...Array(config.outputHeight)].map(() => [default_val, default_val, default_val]));
@@ -164,8 +164,11 @@ function animateConv() {
             d3.select("#convButtonColor").attr("fill", config.convolveColor).on("click", animateConv);
             d3.select("#convButtonText").text("Convolve");
             d3.select("#nextButtonWrapper").attr("visibility", "visible");
+            d3.select("#convAllButtonWrapper").attr("visibility", "visible");
 
-            d3.select("#conv-all").attr("disabled", null)
+            if (slide_idx == slides.length - 1) {
+                d3.select("#selectionWrapper").node().style.visibility = "visible";
+            }
         } else {
             ++pixel;
         }
@@ -188,9 +191,7 @@ function updateData() {
     if (slide_idx == slides.length - 1) {
         img_url = document.getElementsByClassName("selected")[0].getAttribute("src");
         kernel_name = document.getElementsByClassName("kselected")[0].dataset.name;
-        //img_url = d3.select("#image-selection").node().value;
-        //kernel_name = d3.select("#filter-selection").node().value;
-        kernel_description = d3.select("#filter-selection").node().selectedOptions[0].title
+        kernel_description = d3.select("#filter-selection option[value=" + kernel_name + "]").node().title
     }
     else {
         let options = Array.apply(null, d3.select("#image-selection").node().options)
@@ -287,11 +288,9 @@ function update_slide(kernel_description=null) {
 
 
     if (slide_idx == slides.length - 1) {
-        d3.select("#kernels").node().hidden = false;
-        d3.select("#thumbs").node().hidden = false;
+        d3.select("#selectionWrapper").node().style.visibility = "visible";
     } else {
-        d3.select("#kernels").node().hidden = true;
-        d3.select("#thumbs").node().hidden = true;
+        d3.select("#selectionWrapper").node().style.visibility = "hidden";
     }
 }
 
@@ -330,6 +329,7 @@ function next_slide() {
 export function initButtons() {
     const convAllButton = d3.select("#rootDisplay")
     .append("g")
+    .attr("id", "convAllButtonWrapper")
     .attr("transform", `translate(${config.img_width + config.spaceBetween / 4},
                                   ${config.cellHeight})`);
 
@@ -465,5 +465,10 @@ for(let thumbnail of document.getElementsByClassName("thumbnail")) {
 //d3.select("#prev").style("visibility", "hidden");
 //d3.select("#prev").on("click", prev_slide)
 //d3.select("#next").on("click", next_slide)
+
+document.documentElement.style.setProperty('--thumbSize', `${config.cellWidth * 3}px`);
+document.documentElement.style.setProperty('--kernelThumbSize', `${config.cellWidth}px`);
+document.documentElement.style.setProperty('--kernelThumbFont', `${config.fontSize}px`);
+ 
 
 window.onload = main;
