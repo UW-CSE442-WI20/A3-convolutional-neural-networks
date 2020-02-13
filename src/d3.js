@@ -2,7 +2,8 @@ import * as d3 from "d3";
 import * as tf from "@tensorflow/tfjs";
 
 import * as config from "./config";
-import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation} from "./initSVG";
+
+import {initSVG, initInputImg, initKernelImg, initOutputImg, initEffects, initAnnotations, updateAnnotation, initControls} from "./initSVG";
 import {drawInputData, drawKernelData, drawOutputData, drawEffects, removeEffects, grayToFloat, drawOutputDataPoint} from "./updateSVG";
 import {createConv} from "./tensor";
 import {Slide} from "./slide"
@@ -237,7 +238,7 @@ function update_slide(kernel_description=null) {
 
     let annotation = slides[slide_idx].annotation;
     if (kernel_description != null) {
-        annotation += " \n \n \n \n \n \n \n \n \n" + kernel_description;
+        annotation += " \n \n \n \n \n \n " + kernel_description;
     }
 
     updateAnnotation(annotation)
@@ -327,23 +328,47 @@ function next_slide() {
 }
 
 export function initButtons() {
+    const convAllButton = d3.select("#rootDisplay")
+    .append("g")
+    .attr("transform", `translate(${config.img_width + config.spaceBetween / 4},
+                                  ${config.cellHeight})`);
+
+    convAllButton.append("rect")
+        .attr("id", "convAllButtonColor")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", config.spaceBetween / 2)
+        .attr("height", config.spaceBetween / 8)
+        .on("click", animateConv)
+        .attr("fill", config.convolveColor);
+    convAllButton.append("text")
+        .attr("id", "convAllButtonText")
+        .attr("x", config.spaceBetween / 4)
+        .attr("y", config.spaceBetween / 16)
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", config.fontSize)
+        .text("Convolve All");
+
     const convButton = d3.select("#rootDisplay")
     .append("g")
     .attr("transform", `translate(${config.img_width + config.spaceBetween / 4},
-                                  ${config.cellHeight * 3})`);
+                                  ${config.cellHeight * 2 + config.spaceBetween / 8})`);
 
     convButton.append("rect")
         .attr("id", "convButtonColor")
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", config.spaceBetween / 2)
-        .attr("height", config.spaceBetween / 6)
+        .attr("height", config.spaceBetween / 8)
         .on("click", animateConv)
         .attr("fill", config.convolveColor);
     convButton.append("text")
         .attr("id", "convButtonText")
         .attr("x", config.spaceBetween / 4)
-        .attr("y", config.spaceBetween / 12)
+        .attr("y", config.spaceBetween / 16)
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
@@ -355,14 +380,14 @@ export function initButtons() {
     .append("g")
     .attr("id", "nextButtonWrapper")
     .attr("transform", `translate(${config.img_width + config.spaceBetween / 4},
-                                  ${config.cellHeight * 4 + config.spaceBetween / 6})`);
+                                  ${config.cellHeight * 3 + config.spaceBetween / 4})`);
 
     nextButton.append("rect")
         .attr("x", 0)
         .attr("y", 0)
         .attr("id", "prevButtonColor")
         .attr("width", config.spaceBetween / 2)
-        .attr("height", config.spaceBetween / 6)
+        .attr("height", config.spaceBetween / 8)
         .on("click", next_slide)
         .attr("fill", config.nextColor);
     nextButton.append("rect")
@@ -370,13 +395,13 @@ export function initButtons() {
         .attr("x", config.spaceBetween / 4)
         .attr("y", 0)
         .attr("width", config.spaceBetween / 4)
-        .attr("height", config.spaceBetween / 6)
+        .attr("height", config.spaceBetween / 8)
         .on("click", next_slide)
         .attr("fill", config.nextColor);
     nextButton.append("text")
         .attr("id", "prevButtonText")
         .attr("x", config.spaceBetween / 8)
-        .attr("y", config.spaceBetween / 12)
+        .attr("y", config.spaceBetween / 16)
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
@@ -386,7 +411,7 @@ export function initButtons() {
     nextButton.append("text")
         .attr("id", "nextButtonText")
         .attr("x", config.spaceBetween * 3 / 8)
-        .attr("y", config.spaceBetween / 12)
+        .attr("y", config.spaceBetween / 16)
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
@@ -396,7 +421,7 @@ export function initButtons() {
     nextButton.append("text")
         .attr("id", "bigNextButtonText")
         .attr("x", config.spaceBetween / 4)
-        .attr("y", config.spaceBetween / 12)
+        .attr("y", config.spaceBetween / 16)
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
@@ -416,7 +441,9 @@ function main() {
     initOutputImg();
     initEffects();
     initAnnotations();
+
     update_slide();
+    initControls();
     initKernelPreviews();
     updateData();
     
@@ -432,11 +459,11 @@ for(let thumbnail of document.getElementsByClassName("thumbnail")) {
     })
 }
 
-d3.select("#auto-conv").on("click", animateConv);
-d3.select("#conv-all").on("click", conv_all);
+//d3.select("#auto-conv").on("click", animateConv);
+//d3.select("#conv-all").on("click", conv_all);
 
-d3.select("#prev").style("visibility", "hidden");
-d3.select("#prev").on("click", prev_slide)
-d3.select("#next").on("click", next_slide)
+//d3.select("#prev").style("visibility", "hidden");
+//d3.select("#prev").on("click", prev_slide)
+//d3.select("#next").on("click", next_slide)
 
 window.onload = main;
